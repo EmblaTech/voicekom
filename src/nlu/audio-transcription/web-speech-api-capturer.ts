@@ -1,6 +1,7 @@
 import { Logger } from '../../utils/logger';
 import { AudioCapturer, VADConfig } from '../../types';
 import { EventBus, SpeechEvents } from '../../common/eventbus';
+import { tryAcquireMicLock } from '../../utils/mic-lock';
 
 /**
  * An AudioCapturer implementation that uses the browser's built-in Web Speech API.
@@ -12,6 +13,8 @@ import { EventBus, SpeechEvents } from '../../common/eventbus';
 
 export class WebSpeechAPICapturer implements AudioCapturer {
   private recognition: SpeechRecognition | null = null;
+  private micLock: { acquired: boolean; isOwner: () => boolean; release: () => void; dispose: () => void } | null = null;
+  private onVisibilityRef: (() => void) | null = null;
   
   // State Management
   private isMonitoring = false; // Is the system supposed to be listening? (controlled by start/stopListening)
@@ -44,6 +47,25 @@ export class WebSpeechAPICapturer implements AudioCapturer {
   public async startListening(config: VADConfig): Promise<void> {
     if (this.isMonitoring) {
       this.logger.warn('WebSpeechApiCapturer is already monitoring.');
+      return;
+    }
+
+    if (typeof document !== 'undefined' && document.hidden) {
+      this.logger.warn('Tab is hidden; blocking startListening to avoid background capture.');
+      return;
+    }
+
+    try {
+      this.micLock = await tryAcquireMicLock();
+      if (!this.micLock.acquired || !this.micLock.isOwner()) {
+        this.logger.warn('Microphone is in use by another tab. Not starting listening.');
+        this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, new Error('MIC_IN_USE'));
+        return;
+      }
+      this.eventBus.emit(SpeechEvents.MIC_LOCK_OWNED);
+    } catch (e) {
+      this.logger.error('Failed to acquire microphone lock.', e);
+      this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, new Error('MIC_LOCK_FAILED'));
       return;
     }
 
@@ -115,6 +137,10 @@ export class WebSpeechAPICapturer implements AudioCapturer {
       
       // If the session is still supposed to be active, start listening for the next utterance.
       if (this.isMonitoring) {
+        if ((typeof document !== 'undefined' && document.hidden) || !this.micLock?.isOwner()) {
+          this.logger.warn('Auto-restart suppressed (hidden tab or lost mic lock).');
+          return;
+        }
         // A small delay can prevent some rapid-fire restart issues on certain browsers.
         setTimeout(() => this.recognition?.start(), 100);
       } else {
@@ -124,6 +150,13 @@ export class WebSpeechAPICapturer implements AudioCapturer {
     
     // Kick off the first listening cycle.
     this.recognition.start();
+    this.onVisibilityRef = () => {
+      if (document.hidden) {
+        this.logger.info('Tab hidden; stopping listening to release microphone.');
+        this.stopListening();
+      }
+    };
+    document.addEventListener('visibilitychange', this.onVisibilityRef, { once: false });
   }
 
   public stopListening(): void {
@@ -138,6 +171,17 @@ export class WebSpeechAPICapturer implements AudioCapturer {
       this.recognition.abort(); 
       this.recognition = null;
     }
+    if (this.onVisibilityRef) {
+      document.removeEventListener('visibilitychange', this.onVisibilityRef as EventListener);
+      this.onVisibilityRef = null;
+    }
+    
+    try {
+      this.micLock?.release();
+      this.micLock?.dispose();
+      this.eventBus.emit(SpeechEvents.MIC_LOCK_RELEASED);
+    } catch {}
+    this.micLock = null;
   }
 
   public getIsRecording(): boolean {

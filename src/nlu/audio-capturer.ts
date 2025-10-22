@@ -1,6 +1,7 @@
 import { Logger } from '../utils/logger';
 import { AudioCapturer, VADConfig } from '../types';
 import { EventBus, SpeechEvents } from '../common/eventbus';
+import { tryAcquireMicLock } from '../utils/mic-lock';
 
 export class WebAudioCapturer implements AudioCapturer {
   // --- VAD & Audio Processing Properties ---
@@ -31,6 +32,8 @@ export class WebAudioCapturer implements AudioCapturer {
   private sampleRate = 44100; // Will be updated by AudioContext
 
   private readonly logger = Logger.getInstance();
+  private micLock: { acquired: boolean; isOwner: () => boolean; release: () => void; dispose: () => void } | null = null;
+  private onVisibilityRef: (() => void) | null = null;
 
   constructor(private readonly eventBus: EventBus) {}
 
@@ -41,6 +44,25 @@ export class WebAudioCapturer implements AudioCapturer {
     this.speakingThreshold = config.speakingThreshold;
 
     try {
+      if (typeof document !== 'undefined' && document.hidden) {
+        this.logger.warn('Tab hidden; not starting WebAudioCapturer.');
+        return;
+      }
+
+      try {
+        this.micLock = await tryAcquireMicLock();
+        if (!this.micLock.acquired || !this.micLock.isOwner()) {
+          this.logger.warn('Microphone is in use by another tab. Not starting WebAudioCapturer.');
+          this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, new Error('MIC_IN_USE'));
+          return;
+        }
+        this.eventBus.emit(SpeechEvents.MIC_LOCK_OWNED);
+      } catch (e) {
+        this.logger.error('Failed to acquire microphone lock (WebAudioCapturer).', e);
+        this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, new Error('MIC_LOCK_FAILED'));
+        return;
+      }
+
       this.vadStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.audioContext = new AudioContext();
       this.sampleRate = this.audioContext.sampleRate; // Get the actual sample rate
@@ -61,6 +83,14 @@ export class WebAudioCapturer implements AudioCapturer {
 
       this.isMonitoring = true;
       this.monitorVolume();
+
+      this.onVisibilityRef = () => {
+        if (document.hidden) {
+          this.logger.info('Tab hidden; stopping WebAudioCapturer to release microphone.');
+          this.stopListening();
+        }
+      };
+      document.addEventListener('visibilitychange', this.onVisibilityRef, { once: false });
     } catch (error) {
       this.cleanup();
       this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, error);
@@ -74,6 +104,17 @@ export class WebAudioCapturer implements AudioCapturer {
       this.stopSingleRecording(); // Finalize any in-progress recording
     }
     this.cleanup();
+    if (this.onVisibilityRef) {
+      document.removeEventListener('visibilitychange', this.onVisibilityRef as EventListener);
+      this.onVisibilityRef = null;
+    }
+    
+    try {
+      this.micLock?.release();
+      this.micLock?.dispose();
+      this.eventBus.emit(SpeechEvents.MIC_LOCK_RELEASED);
+    } catch {}
+    this.micLock = null;
   }
   
   private handleAudioProcess(event: AudioProcessingEvent): void {

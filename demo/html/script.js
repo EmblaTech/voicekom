@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {  
+  if (window.__vkDemoInitialized) return;
+  window.__vkDemoInitialized = true;
   VoiceKom.init({   
     wakeWords: ['Hello','Hi','start'],
     sleepWords: ['Stop listening', 'stop'],
@@ -17,6 +19,17 @@ document.addEventListener('DOMContentLoaded', () => {
     debug: true
   }).then(() => {
     console.log('VoiceKom has been initialized successfully');
+  }).catch((err) => {
+    const msg = String(err?.message || err);
+    if (msg.includes('MIC_IN_USE') || msg.includes('MIC_LOCK')) {
+      const container = document.getElementById('speech-container') || document.body;
+      const note = document.createElement('div');
+      note.style.cssText = 'background:#fff3cd;color:#664d03;border:1px solid #ffecb5;padding:8px 12px;border-radius:6px;margin:8px 0;font:14px system-ui';
+      note.textContent = 'Microphone is active in another tab. Close that tab or switch to it to use voice here.';
+      container.prepend(note);
+    } else {
+      console.error('VoiceKom init failed:', err);
+    }
   });
 
   const contactForm = document.querySelector('.contact-form');
@@ -32,6 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Optional: Reset all the form fields to their initial state
         contactForm.reset();
       });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+  });
   
 });
 

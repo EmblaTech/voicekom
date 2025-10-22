@@ -1,10 +1,12 @@
 import Fuse , { IFuseOptions } from 'fuse.js'; // NEW: Import Fuse.js
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { WakewordDetector } from '../types';
+import { tryAcquireMicLock } from '../utils/mic-lock';
 
 export class WebspeechWakewordDetector implements WakewordDetector {
   private readonly recognition: SpeechRecognition;
   private isListening = false;
+  private micLock: { acquired: boolean; isOwner: () => boolean; release: () => void; dispose: () => void } | null = null;
   
   // These will be initialized later
   private wakeWords: string[] = ['hey'];
@@ -119,6 +121,9 @@ export class WebspeechWakewordDetector implements WakewordDetector {
 
     this.recognition.onend = () => {
       if (this.isListening) {
+        if ((typeof document !== 'undefined' && document.hidden) || !this.micLock?.isOwner()) {
+          return;
+        }
         console.warn("WakeWordDetector: Service ended unexpectedly, restarting...");
         this.recognition.start();
       }
@@ -131,14 +136,32 @@ export class WebspeechWakewordDetector implements WakewordDetector {
     };
   }
 
-  public start(): void {
+  public async start(): Promise<void> {
     if (this.isListening || !this.wakeWords || this.wakeWords.length === 0) {
       return;
     }
     try {
+      if (typeof document !== 'undefined' && document.hidden) {
+        return;
+      }
+
+      try {
+        this.micLock = await tryAcquireMicLock();
+        if (!this.micLock.acquired || !this.micLock.isOwner()) {
+          console.warn('WakeWordDetector: Microphone is in use by another tab. Not starting wake word listening.');
+          this.eventBus.emit(SpeechEvents.MIC_LOCK_RELEASED);
+          return;
+        }
+        this.eventBus.emit(SpeechEvents.MIC_LOCK_OWNED);
+      } catch (e) {
+        console.error('WakeWordDetector: Failed to acquire microphone lock.', e);
+        this.eventBus.emit(SpeechEvents.MIC_LOCK_RELEASED);
+        return;
+      }
+
       this.isListening = true;
       this.recognition.start();
-      console.log(`WakeWordDetector: Passively listening for "${this.wakeWords.join(", ")}"...`);
+      console.log(`WakeWordDetector: Passively listening for "${this.wakeWords.join(", ")}"...`);   
     } catch (e) {
       this.isListening = false;
       console.error("Could not start WakeWordDetector:", e);
@@ -152,5 +175,11 @@ export class WebspeechWakewordDetector implements WakewordDetector {
     this.isListening = false;
     this.recognition.stop();
     console.log("WakeWordDetector: Stopped.");
+    try {
+      this.micLock?.release();
+      this.micLock?.dispose();
+      this.eventBus.emit(SpeechEvents.MIC_LOCK_RELEASED);
+    } catch {}
+    this.micLock = null;
   }
 }

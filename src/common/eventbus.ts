@@ -26,8 +26,6 @@ export enum SpeechEvents {
   TRANSCRIPTION_STARTED = 'transcriptionStarted',
   TRANSCRIPTION_COMPLETED = 'transcriptionCompleted',
   NLU_COMPLETED ='nluCompleted',
-  MIC_LOCK_OWNED = 'micLockOwned',
-  MIC_LOCK_RELEASED = 'micLockReleased',
   
 
   // Action Events

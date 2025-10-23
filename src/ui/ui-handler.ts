@@ -23,7 +23,6 @@ export class UIHandler {
   private statusDisplay: HTMLDivElement | null = null;
   private transcriptionDisplay: HTMLDivElement | null = null;
   private recordingIndicator: HTMLSpanElement | null = null;
-  private micHealth: HTMLDivElement | null = null;
 
   // State
   private transcription: string | null = null;
@@ -60,8 +59,6 @@ export class UIHandler {
     // This allows you to either rely on the internal event bus or call displayError directly.
     // this.eventBus.on(SpeechEvents.ERROR_OCCURRED, this.onError.bind(this));
     this.eventBus.on(SpeechEvents.LISTEN_STARTED, this.onNewRecording.bind(this));
-    this.eventBus.on(SpeechEvents.MIC_LOCK_OWNED, () => this.setMicHealth(true));
-    this.eventBus.on(SpeechEvents.MIC_LOCK_RELEASED, () => this.setMicHealth(false));
   }
   
   private onNewRecording(): void {
@@ -136,9 +133,6 @@ export class UIHandler {
       pointer-events: none;
     }
     @keyframes wave-pulse { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; } 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.3; } 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; } }
-    .mic-health { margin-left: 8px; font: 12px/20px system-ui; padding: 0 6px; border-radius: 10px; border: 1px solid #ddd; }
-    .mic-health.as-leader { background: #e8f5e9; color: #1b5e20; border-color: #c8e6c9; }
-    .mic-health.as-follower { background: #f3f4f6; color: #374151; border-color: #e5e7eb; }
     `;
     styleElement.textContent = cssContent + customAnimationStyles;
     document.head.appendChild(styleElement);
@@ -166,7 +160,6 @@ export class UIHandler {
     this.buttonWidget = this.widget.querySelector(this.BUTTON_WIDGET_SELECTOR);
     this.statusDisplay = this.widget.querySelector(this.STATUS_DISPLAY_SELECTOR);
     this.transcriptionDisplay = this.widget.querySelector(this.TRANSCRIPTION_DISPLAY_SELECTOR);
-  this.micHealth = this.widget.querySelector('.mic-health');
     
     this.logger.info('UI Elements found:', { actionButton: !!this.actionButton, buttonWidget: !!this.buttonWidget, statusDisplay: !!this.statusDisplay, transcriptionDisplay: !!this.transcriptionDisplay });
     
@@ -174,7 +167,6 @@ export class UIHandler {
       this.bindEventListeners();
     }
     this.syncTranscriptionDisplay();
-    this.setMicHealth(false);
   }
 
   private bindEventListeners(): void {
@@ -197,6 +189,33 @@ export class UIHandler {
     this.setActionButton(status);
     this.setButtonAnimation(status);
     this.syncTranscriptionDisplay();
+  }
+
+  public showPersistentMessage(message: string): void {
+    if (this.statusDisplay) {
+      this.statusDisplay.textContent = message;
+      this.statusDisplay.classList.add('error-state');
+    }
+    if (this.actionButton) {
+      this.actionButton.disabled = true;
+      this.actionButton.style.pointerEvents = 'none';
+      this.actionButton.style.opacity = '0.5';
+    }
+    if (this.transcriptionDisplay) {
+        this.transcriptionDisplay.style.display = 'none';
+    }
+  }
+
+  public hidePersistentMessage(): void {
+    if (this.statusDisplay) {
+        this.statusDisplay.classList.remove('error-state');
+    }
+    if (this.actionButton) {
+      this.actionButton.disabled = false;
+      this.actionButton.style.pointerEvents = 'auto';
+      this.actionButton.style.opacity = '1';
+    }
+    this.updateUIStatus();
   }
 
   public setTranscription(transcription: string): void {
@@ -224,9 +243,6 @@ export class UIHandler {
   }
  
   private getMessage(error: unknown): string {
-    if (error instanceof Error && (error.message === 'MIC_IN_USE' || error.message === 'MIC_LOCK_FAILED')) {
-      return 'Mic is already in use in another tab. Please close other tabs.';
-    }
     if (error && typeof error === 'object' && 'type' in error) {
       switch ((error as { type: ErrorType }).type) {
         case ErrorType.MICROPHONE_ACCESS: return 'Please allow microphone access';
@@ -290,13 +306,6 @@ export class UIHandler {
       case StatusType.LISTENING: this.buttonWidget.classList.add('listening'); break;
       case StatusType.RECORDING: this.buttonWidget.classList.add('recording'); break;
     }
-  }
-
-  private setMicHealth(owned: boolean) {
-    if (!this.micHealth) return;
-    this.micHealth.textContent = owned ? 'Leader' : 'Follower';
-    this.micHealth.classList.toggle('as-leader', owned);
-    this.micHealth.classList.toggle('as-follower', !owned);
   }
 
   private syncTranscriptionDisplay(): void {

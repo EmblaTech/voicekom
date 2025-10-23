@@ -32,9 +32,15 @@ export interface StatusMeta {
   innerHTML: string;
 }
 
+export interface StatusValue {
+  value: StatusType;
+  message?: string;
+}
+
 export class Status {
   private currentStatus: StatusType;
   private message?: string;
+  private listeners: ((status: StatusValue) => void)[] = [];
 
   constructor() {
     this.currentStatus = StatusType.IDLE;
@@ -42,7 +48,7 @@ export class Status {
   }
   
   // Get current state (immutable)
-  public get(): Readonly<any> {
+  public get(): Readonly<StatusValue> {
     return { 
         value: this.currentStatus,
         message: this.message
@@ -54,10 +60,15 @@ export class Status {
     this.currentStatus = status;
     this.message = message;
     console.log(`[STATE]:${status}`)
+    this.listeners.forEach(listener => listener(this.get()));
   }
   
   // Reset state
   public reset(): void {
     this.set(StatusType.IDLE, "");
+  }
+
+  public onChange(listener: (status: StatusValue) => void): void {
+    this.listeners.push(listener);
   }
 }

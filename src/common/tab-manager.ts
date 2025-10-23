@@ -1,23 +1,28 @@
 import { Logger } from '../utils/logger';
+import { StatusType } from './status';
 
 const logger = Logger.getInstance();
 
-const CHANNEL_NAME = 'voicekom_tab_manager_v3';
+const CHANNEL_NAME = 'voicekom_tab_manager_v4';
 const LOCK_KEY = 'voicekom_leader_lock';
-const HEARTBEAT_INTERVAL = 2000; // Leader sends a heartbeat every 2 seconds
-const WATCHDOG_TIMEOUT = 5000;  // Standby tabs expect a heartbeat at least every 5 seconds
+const HEARTBEAT_INTERVAL = 1500; // Increased frequency for faster status updates
+const WATCHDOG_TIMEOUT = 4000;  // Shorter timeout for quicker failover
 
 type Message = {
-  type: 'HEARTBEAT' | 'SHUTDOWN';
+  type: 'HEARTBEAT' | 'SHUTDOWN' | 'REQUEST_LEADERSHIP' | 'RELINQUISH_LEADERSHIP';
   tabId: string;
+  status?: StatusType;
 };
 
 export class TabManager {
   private readonly tabId = `${Date.now()}-${Math.random().toString(36).substring(2)}`;
   private channel: BroadcastChannel;
   private isLeader = false;
+  private isProbing = false; // Add a probing state
   private heartbeatInterval: number | null = null;
   private watchdogTimeout: number | null = null;
+  private appStatus: StatusType = StatusType.IDLE;
+  private lastKnownLeaderStatus: StatusType = StatusType.IDLE;
 
   public onBecameLeader: () => void = () => {};
   public onBecameStandby: () => void = () => {};
@@ -26,6 +31,7 @@ export class TabManager {
     this.channel = new BroadcastChannel(CHANNEL_NAME);
     this.channel.onmessage = this.handleMessage.bind(this);
     window.addEventListener('beforeunload', this.shutdown.bind(this));
+    window.addEventListener('visibilitychange', this.handleVisibilityChange.bind(this));
     
     logger.info(`TabManager [${this.tabId}]: Initializing.`);
   }
@@ -35,16 +41,59 @@ export class TabManager {
     this.attemptToBecomeLeader();
   }
 
+  public setStatus(status: StatusType): void {
+    this.appStatus = status;
+  }
+
+  private handleVisibilityChange(): void {
+    if (document.visibilityState === 'visible' && !this.isLeader) {
+      logger.info(`TabManager [${this.tabId}]: Tab became visible. Last known leader status: ${this.lastKnownLeaderStatus}`);
+      if (this.lastKnownLeaderStatus === StatusType.IDLE) {
+        logger.info(`TabManager [${this.tabId}]: Requesting leadership from idle leader.`);
+        this.sendMessage('REQUEST_LEADERSHIP');
+      }
+    }
+  }
+
   private handleMessage(event: MessageEvent<Message>): void {
     if (event.data.tabId === this.tabId) return;
 
     switch (event.data.type) {
       case 'HEARTBEAT':
+        if (this.isProbing) {
+          // We were waiting for the first heartbeat to decide what to do.
+          this.isProbing = false;
+          this.lastKnownLeaderStatus = event.data.status || StatusType.IDLE;
+          logger.info(`TabManager [${this.tabId}]: Probing finished. Leader status is ${this.lastKnownLeaderStatus}.`);
+
+          if (this.lastKnownLeaderStatus === StatusType.IDLE) {
+            // Leader is idle, let's try to take over.
+            this.sendMessage('REQUEST_LEADERSHIP');
+          } else {
+            // Leader is busy, so we become a true standby and show the message.
+            this.onBecameStandby();
+          }
+        }
+
         if (!this.isLeader) {
+          this.lastKnownLeaderStatus = event.data.status || StatusType.IDLE;
           this.resetWatchdog();
         }
         break;
-        
+      
+      case 'REQUEST_LEADERSHIP':
+        if (this.isLeader && this.appStatus === StatusType.IDLE) {
+          logger.info(`TabManager [${this.tabId}]: Received leadership request. Relinquishing leadership.`);
+          this.sendMessage('RELINQUISH_LEADERSHIP');
+          this.relinquishLeadership();
+        }
+        break;
+
+      case 'RELINQUISH_LEADERSHIP':
+        logger.info(`TabManager [${this.tabId}]: Previous leader relinquished control. Attempting to take over.`);
+        this.attemptToBecomeLeader();
+        break;
+
       case 'SHUTDOWN':
         logger.info(`TabManager [${this.tabId}]: Leader [${event.data.tabId}] shut down. Attempting to take over.`);
         this.attemptToBecomeLeader();
@@ -53,29 +102,32 @@ export class TabManager {
   }
 
   private sendMessage(type: Message['type']): void {
-    this.channel.postMessage({ type, tabId: this.tabId });
+    const message: Message = { type, tabId: this.tabId };
+    if (type === 'HEARTBEAT') {
+      message.status = this.appStatus;
+    }
+    this.channel.postMessage(message);
   }
 
   private attemptToBecomeLeader(): void {
-    const leaderId = localStorage.getItem(LOCK_KEY);
+    // Use a small delay to prevent race conditions during handover
+    setTimeout(() => {
+      const leaderId = localStorage.getItem(LOCK_KEY);
 
-    if (leaderId === null) {
-      // No leader exists, try to claim it.
-      localStorage.setItem(LOCK_KEY, this.tabId);
-      // Double-check to ensure atomicity.
-      if (localStorage.getItem(LOCK_KEY) === this.tabId) {
+      if (leaderId === null) {
+        localStorage.setItem(LOCK_KEY, this.tabId);
+        if (localStorage.getItem(LOCK_KEY) === this.tabId) {
+          this.becomeLeader();
+        } else {
+          this.becomeStandby();
+        }
+      } else if (leaderId === this.tabId) {
         this.becomeLeader();
       } else {
-        // Lost the race, another tab claimed it just now.
-        this.becomeStandby();
+        // A leader already exists. Enter probing mode.
+        this.becomeStandby(true);
       }
-    } else if (leaderId === this.tabId) {
-      // This can happen on a page refresh. We are still the leader.
-      this.becomeLeader();
-    } else {
-      // A leader already exists.
-      this.becomeStandby();
-    }
+    }, 50); 
   }
 
   private becomeLeader(): void {
@@ -88,25 +140,39 @@ export class TabManager {
     this.onBecameLeader();
   }
 
-  private becomeStandby(): void {
-    // No need to call onBecameStandby if we are already in that state.
-    if (!this.isLeader && this.watchdogTimeout) return; 
+  private becomeStandby(isInitialProbe = false): void {
+    if (isInitialProbe) {
+      logger.info(`TabManager [${this.tabId}]: Entering probing mode.`);
+      this.isProbing = true;
+      this.isLeader = false;
+      this.stopHeartbeat();
+      this.resetWatchdog(); // Start watchdog to detect if the leader is dead
+      return;
+    }
+
+    if (!this.isLeader && this.watchdogTimeout && !this.isProbing) return; 
 
     logger.info(`TabManager [${this.tabId}]: Becoming standby.`);
+    this.isProbing = false;
     this.isLeader = false;
     this.stopHeartbeat();
     this.resetWatchdog();
     this.onBecameStandby();
   }
 
+  private relinquishLeadership(): void {
+    if (!this.isLeader) return;
+    logger.info(`TabManager [${this.tabId}]: Gracefully relinquishing leadership.`);
+    localStorage.removeItem(LOCK_KEY);
+    this.becomeStandby();
+  }
+
   private startHeartbeat(): void {
     if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
     this.heartbeatInterval = window.setInterval(() => {
-      // Ensure we are still the leader before sending heartbeat.
       if (localStorage.getItem(LOCK_KEY) === this.tabId) {
         this.sendMessage('HEARTBEAT');
       } else {
-        // Lost leadership somehow (e.g., localStorage cleared manually).
         logger.warn(`TabManager [${this.tabId}]: Lost leadership unexpectedly. Becoming standby.`);
         this.becomeStandby();
       }
@@ -124,13 +190,8 @@ export class TabManager {
     this.stopWatchdog();
     this.watchdogTimeout = window.setTimeout(() => {
       logger.warn(`TabManager [${this.tabId}]: Leader heartbeat timed out. Attempting to take over.`);
-      // Assume leader is dead, remove the lock and try to become leader.
       const currentLeader = localStorage.getItem(LOCK_KEY);
       if (currentLeader) {
-        // Only remove the lock if it's still there. This prevents a race condition
-        // where a new leader is chosen while we are about to remove the lock.
-        // A more advanced implementation might check if the leader ID has changed
-        // to a new one, but for now, just attempting to take over is reasonable.
         localStorage.removeItem(LOCK_KEY);
       }
       this.attemptToBecomeLeader();

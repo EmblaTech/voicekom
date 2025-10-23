@@ -66,6 +66,8 @@ export class CoreModule {
     this.status.set(StatusType.IDLE);
     this.uiHandler.updateUIStatus();
     this.areVoiceComponentsInitialized = true;
+    // Ensure the tab manager has the correct initial status
+    this.tabManager.setStatus(StatusType.IDLE);
   }
 
   private shutdownVoiceComponents(): void {
@@ -83,6 +85,13 @@ export class CoreModule {
 
   // ... (The rest of the bindEvents and handler methods remain the same)
   private bindEvents(): void {
+    // --- Status Reporting to TabManager ---
+    // Whenever the status changes, report it to the TabManager.
+    this.status.onChange((newStatus) => {
+      this.tabManager.setStatus(newStatus.value);
+    });
+    // ------------------------------------
+
     // Simplified for brevity. In a real app, store references to handlers to be able to call .off()
     const resettoIdleLogic = () => {
         this.status.set(StatusType.IDLE);

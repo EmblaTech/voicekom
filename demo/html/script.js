@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
       apiKey: '' 
     },
     recognition: {
-      provider: 'default',
+      provider: 'openai',
       apiKey: '' 
     },
     speakingThreshold: 0.2, 

@@ -5,8 +5,17 @@ const LOCK_KEY = 'voicekom_leader_lock';
 const HEARTBEAT_INTERVAL = 1500;
 const WATCHDOG_TIMEOUT = 4000;
 
+const MESSAGE_TYPES = {
+  HEARTBEAT: 'HEARTBEAT',
+  SHUTDOWN: 'SHUTDOWN',
+  REQUEST_LEADERSHIP: 'REQUEST_LEADERSHIP',
+  RELINQUISH_LEADERSHIP: 'RELINQUISH_LEADERSHIP',
+} as const;
+
+type MessageType = typeof MESSAGE_TYPES[keyof typeof MESSAGE_TYPES];
+
 type Message = {
-  type: 'HEARTBEAT' | 'SHUTDOWN' | 'REQUEST_LEADERSHIP' | 'RELINQUISH_LEADERSHIP';
+  type: MessageType;
   tabId: string;
   status?: StatusType;
 };
@@ -29,7 +38,6 @@ export class TabManager {
     this.channel.onmessage = this.handleMessage.bind(this);
     window.addEventListener('beforeunload', this.shutdown.bind(this));
     window.addEventListener('visibilitychange', this.handleVisibilityChange.bind(this));
-    
     console.log(`TabManager [${this.tabId}]: Initializing.`);
   }
 
@@ -47,57 +55,51 @@ export class TabManager {
       console.log(`TabManager [${this.tabId}]: Tab became visible. Last known leader status: ${this.lastKnownLeaderStatus}`);
       if (this.lastKnownLeaderStatus === StatusType.IDLE) {
         console.log(`TabManager [${this.tabId}]: Requesting leadership from idle leader.`);
-        this.sendMessage('REQUEST_LEADERSHIP');
+        this.sendMessage(MESSAGE_TYPES.REQUEST_LEADERSHIP);
       }
     }
   }
 
   private handleMessage(event: MessageEvent<Message>): void {
     if (event.data.tabId === this.tabId) return;
-
     switch (event.data.type) {
-      case 'HEARTBEAT':
+      case MESSAGE_TYPES.HEARTBEAT:
         if (this.isProbing) {
           this.isProbing = false;
           this.lastKnownLeaderStatus = event.data.status || StatusType.IDLE;
           console.log(`TabManager [${this.tabId}]: Probing finished. Leader status is ${this.lastKnownLeaderStatus}.`);
-
           if (this.lastKnownLeaderStatus === StatusType.IDLE) {
-            this.sendMessage('REQUEST_LEADERSHIP');
+            this.sendMessage(MESSAGE_TYPES.REQUEST_LEADERSHIP);
           } else {
             this.onBecameStandby();
           }
         }
-
         if (!this.isLeader) {
           this.lastKnownLeaderStatus = event.data.status || StatusType.IDLE;
           this.resetWatchdog();
         }
         break;
-      
-      case 'REQUEST_LEADERSHIP':
+      case MESSAGE_TYPES.REQUEST_LEADERSHIP:
         if (this.isLeader && this.appStatus === StatusType.IDLE) {
           console.log(`TabManager [${this.tabId}]: Received leadership request. Relinquishing leadership.`);
-          this.sendMessage('RELINQUISH_LEADERSHIP');
+          this.sendMessage(MESSAGE_TYPES.RELINQUISH_LEADERSHIP);
           this.relinquishLeadership();
         }
         break;
-
-      case 'RELINQUISH_LEADERSHIP':
+      case MESSAGE_TYPES.RELINQUISH_LEADERSHIP:
         console.log(`TabManager [${this.tabId}]: Previous leader relinquished control. Attempting to take over.`);
         this.attemptToBecomeLeader();
         break;
-
-      case 'SHUTDOWN':
+      case MESSAGE_TYPES.SHUTDOWN:
         console.log(`TabManager [${this.tabId}]: Leader [${event.data.tabId}] shut down. Attempting to take over.`);
         this.attemptToBecomeLeader();
         break;
     }
   }
 
-  private sendMessage(type: Message['type']): void {
+  private sendMessage(type: MessageType): void {
     const message: Message = { type, tabId: this.tabId };
-    if (type === 'HEARTBEAT') {
+    if (type === MESSAGE_TYPES.HEARTBEAT) {
       message.status = this.appStatus;
     }
     this.channel.postMessage(message);
@@ -106,7 +108,6 @@ export class TabManager {
   private attemptToBecomeLeader(): void {
     setTimeout(() => {
       const leaderId = localStorage.getItem(LOCK_KEY);
-
       if (leaderId === null) {
         localStorage.setItem(LOCK_KEY, this.tabId);
         if (localStorage.getItem(LOCK_KEY) === this.tabId) {
@@ -124,7 +125,6 @@ export class TabManager {
 
   private becomeLeader(): void {
     if (this.isLeader) return;
-
     console.log(`TabManager [${this.tabId}]: Leadership acquired.`);
     this.isLeader = true;
     this.stopWatchdog();
@@ -141,9 +141,7 @@ export class TabManager {
       this.resetWatchdog();
       return;
     }
-
     if (!this.isLeader && this.watchdogTimeout && !this.isProbing) return; 
-
     console.log(`TabManager [${this.tabId}]: Becoming standby.`);
     this.isProbing = false;
     this.isLeader = false;
@@ -163,7 +161,7 @@ export class TabManager {
     if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
     this.heartbeatInterval = window.setInterval(() => {
       if (localStorage.getItem(LOCK_KEY) === this.tabId) {
-        this.sendMessage('HEARTBEAT');
+        this.sendMessage(MESSAGE_TYPES.HEARTBEAT);
       } else {
         console.log(`TabManager [${this.tabId}]: Lost leadership unexpectedly. Becoming standby.`);
         this.becomeStandby();
@@ -201,7 +199,7 @@ export class TabManager {
     if (this.isLeader) {
       console.log(`TabManager [${this.tabId}]: Leader shutting down gracefully.`);
       localStorage.removeItem(LOCK_KEY);
-      this.sendMessage('SHUTDOWN');
+      this.sendMessage(MESSAGE_TYPES.SHUTDOWN);
     }
     this.channel.close();
   }

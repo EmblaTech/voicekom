@@ -51,6 +51,12 @@ export interface CoreConfig {
   actuatorConfig: ActuatorConfig
   wakeWords?: string[]; // Optional wake word for start listening
   sleepWords?: string[]; // Optional wake word for stop listening
+  lang: string; // Wakeword for language selection
+}
+
+export interface LanguageConfig {
+  wake: string[];
+  sleep: string[];
 }
 
 export interface UIConfig {

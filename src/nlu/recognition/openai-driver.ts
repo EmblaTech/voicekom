@@ -462,6 +462,49 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
         ### Final Instruction ###
         Analyze the user's command carefully, identify ALL intents present in the command, apply these rules, and return ONLY the raw JSON array. Do not include any markdown formatting like \`\`\`json or explanations.`;
 
+        systemPrompt += `
+        ### IMPORTANT: Handling Exclusions and Negative Constraints ###
+        Often, a user will ask to perform an action on a group of items while excluding one or more specific items. Your task is to break this down into a sequence of simpler, atomic intents.
+
+        **Your Rule:** When you detect a command to act on a group with an "except" clause (or similar phrasing like "but not" or "besides"), you MUST generate two or more intents:
+        1.  The primary group action intent (e.g., \`CHECK_ALL\`).
+        2.  A subsequent, opposite action intent for each excluded item (e.g., \`UNCHECK_CHECKBOX\`).
+
+        **Example of Applying this Rule:**
+        -   **User Command:** "check all inquiry types except billing"
+        -   **Your Analysis:**
+            1.  The primary command is "check all inquiry types". This maps directly to the \`CHECK_ALL\` intent with a \`targetGroup\` of "inquiry types".
+            2.  The clause "except billing" is a negative constraint. It means after checking all, the "billing" item should be unchecked. This maps to the \`UNCHECK_CHECKBOX\` intent with a \`target\` of "billing".
+        -   **Your Conclusion:** You must return a JSON array containing both of these intents to fully capture the user's request.
+
+        -   **Incorrect Output (Loses Information):**
+            [{"intent": "CHECK_ALL", "confidence": 0.9, "entities": {"targetGroup": {"english": "inquiry types", "user_language": "..."}}}] // WRONG - The exclusion of "billing" is ignored.
+
+        -   **Correct Output (Breaks Down the Complex Command):**
+            [
+              {
+                "intent": "CHECK_ALL",
+                "confidence": 0.95,
+                "entities": {
+                  "targetGroup": {
+                    "english": "inquiry types",
+                    "user_language": "inquiry types"
+                  }
+                }
+              },
+              {
+                "intent": "UNCHECK_CHECKBOX",
+                "confidence": 0.95,
+                "entities": {
+                  "target": {
+                    "english": "billing",
+                    "user_language": "billing"
+                  }
+                }
+              }
+            ]
+        `;
+
         return systemPrompt;
     }
 

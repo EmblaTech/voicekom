@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {  
   VoiceKom.init({   
-    wakeWords: ['Hello','Hi','start'],
-    sleepWords: ['Stop listening', 'stop'],
+    // User can define their own wake/sleep words and language here else default values will be used
+    wakeWords: [],
+    sleepWords: [],
     containerId: 'speech-container',
     lang: 'en-US', // Set the language
     transcription: {

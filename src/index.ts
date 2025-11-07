@@ -40,7 +40,7 @@ export class VoiceKom {
 
     public async init(config: VoiceKomConfig): Promise<void> {
         // 1. Process, validate, and apply defaults all in one step.
-        console.log(config)
+        console.log(config);
         const { finalConfig, errors } = this.processAndValidateConfig(config);
         console.log("finalConfig: ", finalConfig);
         console.log("errors: ", errors);
@@ -176,7 +176,8 @@ export class VoiceKom {
                 timeout: config.timeout ?? this.DEFAULT_TIMEOUT
             },           
             wakeWords: config.wakeWords,
-            sleepWords: config.sleepWords
+            sleepWords: config.sleepWords,
+            lang: config.lang ?? this.DEFAULT_LANG
         };
     }
 

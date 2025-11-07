@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clinic Reception Dashboard</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            background: #f4f7fa;
+            color: #333;
+        }
+
+        header {
+            background: #0078d7;
+            color: #fff;
+            padding: 15px 30px;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        nav {
+            background: #fff;
+            display: flex;
+            justify-content: space-around;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        nav button {
+            background: none;
+            border: none;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        nav button.active {
+            color: #0078d7;
+            border-bottom: 3px solid #0078d7;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #fff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-actions {
+            margin-top: 25px;
+            text-align: right;
+        }
+
+        button.primary {
+            background: #0078d7;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .checkbox-group,
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .report-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        .report-list li {
+            padding: 10px;
+            background: #f0f6ff;
+            border: 1px solid #d9e6f2;
+            border-radius: 5px;
+            margin-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        #filteredReports {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+
+<body>
+    <header>Clinic Reception Dashboard</header>
+    <nav>
+        <button class="tab-btn active" onclick="openTab('appointments')">Appointments</button>
+        <button class="tab-btn" voice.name="go to reports" onclick="openTab('reports')">Reports</button>
+    </nav>
+
+    <div class="container">
+        <form class="appointment-form" voice.name="Patient Appointment Form">
+            <div id="appointments" class="form-section active">
+                <h2>Patient Appointment</h2>
+
+                <label>Patient Name</label>
+                <input type="text" placeholder="Enter patient name" id="patientName" voice.name="patient name">
+
+                <label>Contact Number</label>
+                <input type="tel" placeholder="Enter contact number" voice.name="contact number">
+
+                <label>Appointment Date</label>
+                <input type="date" id="apptDate" voice.name="appointment date">
+
+                <label>Appointment Time</label>
+                <input type="time" id="apptTime" voice.name="appointment time">
+
+                <label>Doctor</label>
+                <select id="doctorSelect" voice.name="doctor">
+                    <option>-- Select Doctor --</option>
+                    <option voice.name="dr. doctor chen cardiology">Dr. Chen - Cardiology</option>
+                    <option voice.name="dr. doctor lee pediatrics">Dr. Lee - Pediatrics</option>
+                    <option voice.name="dr. doctor huang orthopedics">Dr. Huang - Orthopedics</option>
+                </select>
+
+                <label>Gender</label>
+                <div class="radio-group" voice.name="gender">
+                    <label><input type="radio" name="gender" voice.name="male" checked> Male</label>
+                    <label><input type="radio" name="gender" voice.name="female"> Female</label>
+                </div>
+
+                <label>Assistance</label>
+                <div class="checkbox-group" voice.name="assistance">
+                    <label><input type="checkbox" name="wheelchair" voice.name="wheelchair"> Wheelchair</label>
+                    <label><input type="checkbox" name="disabled" voice.name="disabled"> Disabled</label>
+                    <label><input type="checkbox" name="allergy" voice.name="allergy"> Allergy</label>
+                </div>
+
+                <label>Notes</label>
+                <textarea placeholder="Enter short description..." voice.name="notes"></textarea>
+
+                <div class="form-actions">
+                    <button class="primary" voice.name="create appointment">Create Appointment</button>
+                </div>
+
+            </div>
+        </form>
+
+        <form class="appointment-formz" voice.name="Patient Appointment Form">
+            <div id="reports" class="form-section">
+                <h2>Reports & Records</h2>
+
+                <label>Report Type</label>
+                <div class="radio-group" voice.name="report type">
+                    <label><input type="radio" name="report type" value="Patients" voice.name="patient" checked>
+                        Patients</label>
+                    <label><input type="radio" name="report type" value="Tests" voice.name="lab"> Tests</label>
+                    <label><input type="radio" name="report type" value="Revenue" voice.name="payments"> Revenue</label>
+                </div>
+
+                <label>Doctor</label>
+                <div class="checkbox-group" voice.name="doctor">
+                    <label><input type="checkbox" name="doctor" value="Dr. Chen" voice.name="chen"> Dr. Chen -
+                        Cardiology</label>
+                    <label><input type="checkbox" name="doctor" value="Dr. Lee" voice.name="lee"> Dr. Lee -
+                        Pediatrics</label>
+                    <label><input type="checkbox" name="doctor" value="Dr. Huang" voice.name="huang"> Dr. Huang -
+                        Orthopedics</label>
+                </div>
+
+                <label>Start Date</label>
+                <input type="date" id="reportStartDate" name="reportStartDate" voice.name="start date">
+
+                <label>End Date</label>
+                <input type="date" id="reportEndDate" name="reportEndDate" voice.name="end date">
+
+                <div class="form-actions">
+                    <button type="button" class="primary" voice.name="generate report"
+                        onclick="generateReports()">Generate Report</button>
+                </div>
+
+                <!-- <div id="filteredReports"> -->
+                <div id="filteredReports" style="display:none">
+                    <h2>Filtered Reports</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Doctor Name</th>
+                                <th>Report Type</th>
+                                <th>Period</th>
+                                <th id="dynamicHeader">Metric</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody">
+                        </tbody>
+                    </table>
+
+                    <div class="form-actions">
+                        <button class="primary" onclick="downloadReportPDF()" voice.name="Download report">Download
+                            Report PDF</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.form-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function generateReports() {
+            const checkedBoxes = document.querySelectorAll('#reports input[name="doctor"]:checked');
+            const doctors = Array.from(checkedBoxes).map(cb => cb.value).filter(Boolean);
+            const startInput = document.getElementById('reportStartDate');
+            const endInput = document.getElementById('reportEndDate');
+
+            const startDate = startInput ? startInput.value : '';
+            const endDate = endInput ? endInput.value : '';
+
+            if (doctors.length === 0) {
+                alert('Please select at least one doctor.');
+                return;
+            }
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates.');
+                return;
+            }
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('Start date cannot be after end date.');
+                return;
+            }
+
+            if (typeof loadData === 'function') {
+                loadData(doctors, startDate, endDate);
+            } else {
+                console.error('loadData function not found. Ensure the script that defines loadData is loaded and exposes loadData on window.');
+                alert('Internal error: unable to run report. See console.');
+            }
+        }
+    </script>
+    <!-- <script src="../../dist/voicekom.js"></script> -->
+    <script src="script.js"></script>
+
+</body>
+</html>

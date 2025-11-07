@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clinic Reception Dashboard</title>
+  <style>
+    :root{
+      --brand:#0b79d0;
+      --bg:#f4f7fa;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --shadow: 0 4px 14px rgba(11, 121, 208, 0.08);
+      --radius: 8px;
+      --gap:16px;
+      --glass: rgba(255,255,255,0.6);
+      font-family: "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
+    }
+
+    html,body{height:100%;margin:0;background:var(--bg);color:#111}
+    header{
+      background:var(--brand);
+      color:#fff;
+      padding:18px 24px;
+      font-size:1.25rem;
+      font-weight:600;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+    }
+    .brand { display:flex; gap: 12px; align-items:center;}
+    .brand .logo {
+      width:36px;height:36px;border-radius:6px;background:rgba(255,255,255,0.12);
+      display:flex;align-items:center;justify-content:center;font-weight:700;
+    }
+    nav.topnav{
+      background:var(--brand);
+      padding: 0 20px;
+    }
+    .tabs {
+      display:flex;
+      gap: 28px;
+      align-items:center;
+      list-style:none;
+      margin:0;
+      padding:12px 0;
+    }
+    .tabs li{
+      color:#fff;
+      cursor:pointer;
+      padding:10px 8px;
+      border-radius:6px;
+      font-weight:600;
+    }
+    .tabs li.active{
+      background: rgba(255,255,255,0.14);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .page {
+      max-width:1200px;
+      margin:28px auto;
+      padding:0 20px;
+    }
+
+    .card {
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:22px;
+      box-shadow: var(--shadow);
+    }
+
+    /* Appointments layout */
+    .appointments-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    .search-container {
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .search-input {
+      display:flex;
+      align-items:center;
+      background:#f7f9fb;
+      border-radius:10px;
+      padding:8px 10px;
+      border:1px solid #e6eef9;
+      min-width:420px;
+      box-sizing:border-box;
+    }
+
+    .search-input input{
+      border:0;outline:0;background:transparent;font-size:0.95rem;width:100%;
+    }
+
+    .table {
+      width:100%;
+      margin-top:14px;
+      border-collapse:collapse;
+    }
+
+    .table thead th{
+      text-align:left;
+      padding:12px 10px;
+      color:var(--muted);
+      font-size:0.94rem;
+      border-bottom:1px solid #eef4fb;
+    }
+
+    .table tbody td{
+      padding:12px 10px;
+      border-bottom:1px dashed #f0f4f8;
+      vertical-align:middle;
+    }
+
+    .row-actions {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .btn {
+      background:#fff;border:1px solid #e6eef9;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600;
+      box-shadow:none;
+    }
+    .btn.primary { background:var(--brand); color:#fff; border:0; }
+    .btn.ghost { background:#fff; color:var(--muted) }
+
+    .icon-btn { width:38px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:1px solid #e6eef9; background:#fff; cursor:pointer; }
+  /* visible state for toggled notify bell */
+  .notify-btn.active { background:#fff7e6; border-color:#ffd591; }
+  .notify-btn.active::after { content:""; width:6px; height:6px; border-radius:50%; background:#faad14; display:inline-block; margin-left:8px; }
+
+    .pagination {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:18px;
+    }
+
+    .pagination .left, .pagination .center, .pagination .right { display:flex; align-items:center; gap:12px; }
+
+    .select { padding:6px 8px; border-radius:6px; border:1px solid #e6eef9; background:#fff; }
+
+    /* Form layout - looks like the old UI but polished */
+    .form-row { display:flex; gap:12px; align-items:center; margin-top:12px; }
+    .form-col { flex:1; min-width:0; }
+    label { display:block; font-weight:600; color:var(--muted); margin-bottom:6px; font-size:0.9rem; }
+    input, select, textarea { width:100%; padding:10px;border-radius:8px;border:1px solid #e6eef9; background:#fbfdff; font-size:0.95rem; box-sizing:border-box }
+    textarea { min-height:100px; resize:vertical; }
+
+    .hidden { display:none !important; }
+
+    /* toast */
+    .toast {
+      position:fixed;
+      top:20px;
+      right:20px;
+      background: #111;
+      color:#fff;
+      padding:12px 16px;
+      border-radius:8px;
+      box-shadow: 0 8px 26px rgba(0,0,0,0.22);
+      z-index:1200;
+      opacity:0;
+      transform:translateY(-6px);
+      transition: all .28s ease;
+    }
+    .toast.show { opacity:1; transform:translateY(0); }
+
+    /* small screens */
+    @media (max-width: 880px) {
+      .search-input { min-width: 180px; }
+      .form-row { flex-direction:column }
+    }
+
+  /* end of overrides */
+
+    /* confirmation modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:2000}
+    .modal-backdrop.hidden{display:none}
+    .modal-dialog{background:#fff;border-radius:12px;box-shadow:var(--shadow);width:min(420px,92vw);padding:18px}
+    .modal-title{font-weight:700;margin:0 0 8px 0}
+    .modal-body{color:var(--muted);margin-bottom:16px}
+    .modal-actions{display:flex;justify-content:flex-end;gap:10px}
+    .btn-danger{background:#fff;border:1px solid #ffd6d6}
+    .btn-danger.confirm{background:var(--danger);color:#fff;border-color:var(--danger)}
+
+  </style>
+
+  <!-- keep jsPDF if you need later -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+
+<body>
+  <header>
+    <div class="brand">
+      <!-- <div class="logo">CR</div> -->
+      <!-- <div>Clinic Reception Dashboard</div> -->
+    </div>
+
+    <ul class="tabs" role="tablist" aria-label="Main navigation">
+      <li class="active tab-btn" data-tab="appointments">Appointments</li>
+      <li class="tab-btn" data-tab="billing">Billing</li>
+      <li class="tab-btn" data-tab="research">Research</li>
+      <li class="tab-btn" data-tab="reports">Reports</li>
+      <li class="tab-btn" data-tab="help">Help</li>
+    </ul>
+  </header>
+
+  <main class="page">
+    <!-- top-level container card -->
+    <div id="appointments-page" class="card">
+
+      <!-- Appointments top header -->
+      <div class="appointments-header">
+        <div>
+          <h2 style="margin:0 0 6px 0;">List of Appointments</h2>
+        </div>
+
+        <div class="search-container">
+          <div class="search-input" title="Search appointments">
+            <!-- <svg width="16" height="16" viewBox="0 0 24 24" style="margin-right:8px;opacity:.6"><path fill="currentColor" d="M9.5 3A6.5 6.5 0 1 1 3 9.5 6.507 6.507 0 0 1 9.5 3m0-2A8.5 8.5 0 1 0 18 9.5 8.51 8.51 0 0 0 9.5 1z"/><path fill="currentColor" d="M21.71 20.29l-5.4-5.39"/></svg> -->
+            <input id="searchInput" placeholder="Search..." />
+          </div>
+
+          <button id="createBtnTop" class="btn primary">Create Appointment</button>
+        </div>
+      </div>
+
+      <!-- LIST view -->
+      <div id="appointmentsListView">
+        <table class="table" aria-label="Appointments table">
+          <thead>
+            <tr>
+              <th>Reference #</th>
+              <th>Patient name</th>
+              <th>Appointment date & time</th>
+              <th>Doctor</th>
+              <th>Contact number</th>
+              <!-- <th style="width:120px;text-align:center">Notify</th>
+              <th style="width:170px;text-align:right">Actions</th> -->
+            </tr>
+          </thead>
+          <tbody id="appointmentsTbody">
+            <!-- rows rendered by JS -->
+          </tbody>
+        </table>
+
+        <div class="pagination">
+          <div class="left">
+            <label style="font-weight:600;color:var(--muted)">Items per page:</label>
+            <select id="itemsPerPage" class="select">
+              <option>10</option>
+              <option selected>25</option>
+              <option>50</option>
+              <option>100</option>
+            </select>
+            <div style="color:var(--muted)">1–25 of 500 items</div>
+          </div>
+
+          <div class="center">
+            <button class="icon-btn" id="prevPage" title="Previous">First</button>
+            <button class="icon-btn" id="prevPage" title="Previous"><span>&laquo;</span></button>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn ghost">1</button>
+              <button class="btn ghost">2</button>
+              <button class="btn ghost">3</button>
+              <span style="color:var(--muted)">…</span>
+              <button class="btn ghost">20</button>
+            </div>
+            <button class="icon-btn" id="nextPage" title="Next"><span>&raquo;</span></button>
+            <button class="icon-btn" id="nextPage" title="Next">Last</button>
+          </div>
+
+          <!-- <div class="right" style="justify-content:flex-end;">
+            <div style="color:var(--muted)">Jump to page</div>
+          </div> -->
+        </div>
+      </div>
+
+      <!-- FORM view (hidden initially) -->
+      <div id="appointmentsFormView" class="hidden" style="margin-top:18px;">
+        <h2 id="formTitle">Patient Appointment</h2>
+
+        <form id="appointmentForm">
+          <input type="hidden" id="editRef" value="">
+          <div class="form-row">
+            <div class="form-col">
+              <label for="patientName">Patient Name</label>
+              <input id="patientName" name="patientName" required placeholder="Enter patient name">
+            </div>
+            <div class="form-col">
+              <label for="contactNumber">Contact Number</label>
+              <input id="contactNumber" name="contactNumber" type="tel" placeholder="Enter contact number">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label for="apptDate">Appointment Date</label>
+              <input id="apptDate" name="apptDate" type="date">
+            </div>
+            <div class="form-col">
+              <label for="apptTime">Appointment Time</label>
+              <input id="apptTime" name="apptTime" type="time">
+            </div>
+            <div class="form-col">
+              <label for="doctorSelect">Doctor</label>
+              <select id="doctorSelect" name="doctorSelect">
+                <option value="">-- Select Doctor --</option>
+                <option value="Dr. Chen">Dr. Chen - Cardiology</option>
+                <option value="Dr. Lee">Dr. Lee - Pediatrics</option>
+                <option value="Dr. Huang">Dr. Huang - Orthopedics</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label>Gender</label>
+              <div style="display:flex;gap:16px;align-items:center">
+                <label><input type="radio" name="gender" value="Male" checked> Male</label>
+                <label><input type="radio" name="gender" value="Female"> Female</label>
+              </div>
+            </div>
+
+            <div class="form-col">
+              <label>Assistance</label>
+              <div style="display:flex;gap:12px;align-items:center">
+                <label><input type="checkbox" name="assistances" value="Wheelchair"> Wheelchair</label>
+                <label><input type="checkbox" name="assistances" value="Disabled"> Disabled</label>
+                <label><input type="checkbox" name="assistances" value="Allergy"> Allergy</label>
+              </div>
+            </div>
+
+            <div class="form-col">
+              <label for="notes">Notes</label>
+              <input id="notes" name="notes" placeholder="Short notes (optional)">
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px;">
+            <button type="button" class="btn" id="cancelForm">Cancel</button>
+            <button type="submit" class="btn primary" id="submitFormBtn">Save Appointment</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- other tabs content (placeholders) -->
+    <div id="billing-page" class="card hidden" style="margin-top:18px;">
+      <h3>Billing</h3>
+      <p style="color:var(--muted)">Billing module coming soon — placeholder content for now.</p>
+    </div>
+
+    <div id="research-page" class="card hidden" style="margin-top:18px;">
+      <h3>Research</h3>
+      <p style="color:var(--muted)">Research module coming soon — placeholder content for now.</p>
+    </div>
+
+    <div id="reports-page" class="card hidden" style="margin-top:18px;">
+      <h2 style="margin-top:0">Reports &amp; Records</h2>
+
+      <form id="reportsForm" aria-label="Reports filter form">
+        <div class="form-row">
+          <div class="form-col">
+            <label>Report Type</label>
+            <div style="display:flex;gap:20px;align-items:center">
+              <label><input type="radio" name="reportType" value="patients" checked> Patients</label>
+              <label><input type="radio" name="reportType" value="tests"> Tests</label>
+              <label><input type="radio" name="reportType" value="revenue"> Revenue</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:16px;">
+          <div class="form-col">
+            <label>Doctor</label>
+            <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:center">
+              <label><input type="checkbox" name="reportDoctor" value="Dr. Chen"> Dr. Chen - Cardiology</label>
+              <label><input type="checkbox" name="reportDoctor" value="Dr. Lee"> Dr. Lee - Pediatrics</label>
+              <label><input type="checkbox" name="reportDoctor" value="Dr. Huang"> Dr. Huang - Orthopedics</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:16px;">
+          <div class="form-col">
+            <label for="reportStart">Start Date</label>
+            <input id="reportStart" type="date">
+          </div>
+          <div class="form-col">
+            <label for="reportEnd">End Date</label>
+            <input id="reportEnd" type="date">
+          </div>
+          <div class="form-col" style="display:flex;align-items:flex-end;justify-content:flex-end">
+            <button type="button" class="btn primary" id="generateReportBtn">Generate Report</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div id="help-page" class="card hidden" style="margin-top:18px;">
+      <h3>Help</h3>
+      <p style="color:var(--muted)">Help module coming soon — placeholder content for now. FAQs</p>
+    </div>
+
+  </main>
+
+  <!-- toast area -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Optional VoiceKom speech container -->
+  <div id="speech-container" aria-live="polite" class="hidden"></div>
+
+  <!-- load main script -->
+  
+  <!-- Delete confirmation modal -->
+  <div id="deleteModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" aria-describedby="deleteModalDesc">
+    <div class="modal-dialog">
+      <h3 id="deleteModalTitle" class="modal-title">Delete appointment?</h3>
+      <div id="deleteModalDesc" class="modal-body">
+        Are you sure you want to delete appointment <span id="deleteModalMessage" style="font-weight:600"></span>? This action cannot be undone.
+      </div>
+      <div class="modal-actions">
+        <button id="cancelDeleteBtn" type="button" class="btn">Cancel</button>
+        <button id="confirmDeleteBtn" type="button" class="btn btn-danger confirm">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

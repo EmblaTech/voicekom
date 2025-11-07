@@ -1,0 +1,16 @@
+[
+  { "id": 1, "doctor": "Dr. Chen",  "reportType": "Patients", "patientName": "Saman Perera", "testName": null, "amount": null, "startDate": "2025-01-10", "endDate": "2025-01-10", "notes": "Regular visit" },
+
+  
+  { "id": 2, "doctor": "Dr. Lee",   "reportType": "Tests",    "patientName": "Nirmala Silva", "testName": "CBC", "amount": null, "startDate": "2025-02-14", "endDate": "2025-02-14", "notes": "Fasting required" },
+  { "id": 3, "doctor": "Dr. Huang", "reportType": "Revenue",  "patientName": "Amal Fernando", "testName": null, "amount": 150.00, "startDate": "2025-03-15", "endDate": "2025-03-15", "notes": "Surgery deposit" },
+  { "id": 4, "doctor": "Dr. Chen",  "reportType": "Tests",    "patientName": "Kumari Jay", "testName": "ECG", "amount": null, "startDate": "2025-03-20", "endDate": "2025-03-20", "notes": "Pre-op ECG" },
+  { "id": 5, "doctor": "Dr. Lee",   "reportType": "Patients", "patientName": "Ravi Kumar", "testName": null, "amount": null, "startDate": "2025-04-01", "endDate": "2025-04-01", "notes": "Vaccination" },
+  { "id": 6, "doctor": "Dr. Huang", "reportType": "Revenue",  "patientName": "Geetha Perera", "testName": null, "amount": 200.00, "startDate": "2025-04-15", "endDate": "2025-04-15", "notes": "Physio package" },
+  { "id": 7, "doctor": "Dr. Chen",  "reportType": "Patients", "patientName": "Pradeep Silva", "testName": null, "amount": null, "startDate": "2025-05-05", "endDate": "2025-05-05", "notes": "Follow-up" },
+  { "id": 8, "doctor": "Dr. Lee",   "reportType": "Tests",    "patientName": "Anu Wij", "testName": "X-Ray Chest", "amount": null, "startDate": "2025-05-20", "endDate": "2025-05-20", "notes": "trauma" },
+  { "id": 9, "doctor": "Dr. Huang", "reportType": "Revenue",  "patientName": "Rohana Dias", "testName": null, "amount": 95.50, "startDate": "2025-03-21", "endDate": "2025-03-21", "notes": "Single physio session" },
+  { "id": 10,"doctor": "Dr. Chen",  "reportType": "Tests",    "patientName": "Shehan Perera", "testName": "Lipid Panel", "amount": null, "startDate": "2025-02-11", "endDate": "2025-02-11", "notes": "" },
+  { "id": 11,"doctor": "Dr. Lee",   "reportType": "Revenue",  "patientName": "Dilani Perera", "testName": null, "amount": 60.00, "startDate": "2025-06-05", "endDate": "2025-06-05", "notes": "Lab invoice" },
+  { "id": 12,"doctor": "Dr. Huang", "reportType": "Patients", "patientName": "Kamal Fernando", "testName": null, "amount": null, "startDate": "2025-01-25", "endDate": "2025-01-25", "notes": "New patient" }
+]

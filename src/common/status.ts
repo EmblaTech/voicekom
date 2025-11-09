@@ -35,6 +35,7 @@ export interface StatusMeta {
 export class Status {
   private currentStatus: StatusType;
   private message?: string;
+  private listeners: ((status: any) => void)[] = [];
 
   constructor() {
     this.currentStatus = StatusType.IDLE;
@@ -54,10 +55,15 @@ export class Status {
     this.currentStatus = status;
     this.message = message;
     console.log(`[STATE]:${status}`)
+    this.listeners.forEach(listener => listener(this.get()));
   }
   
   // Reset state
   public reset(): void {
     this.set(StatusType.IDLE, "");
+  }
+
+  public onChange(listener: (status: any) => void): void {
+    this.listeners.push(listener);
   }
 }

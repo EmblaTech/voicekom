@@ -4,11 +4,15 @@ import { Status, StatusType } from '../common/status';
 import { CoreConfig, IntentResult } from '../types';
 import { VoiceActuator } from '../actuator/voice-actuator';
 import { NLUModule } from '../nlu/nlu-module';
-import {WebspeechWakewordDetector} from '../wakeword/WebspeechAPICapturer';
+import { WebspeechWakewordDetector } from '../wakeword/WebspeechAPICapturer';
+import { TabManager } from '../common/tab-manager';
 
 export class CoreModule {
   private isListeningModeActive = false;
   private isRecordingModeActive = false;
+  private tabManager: TabManager;
+  private config: CoreConfig | null = null;
+  private areVoiceComponentsInitialized = false;
 
   constructor(
     private readonly nluModule: NLUModule,
@@ -17,26 +21,65 @@ export class CoreModule {
     private readonly eventBus: EventBus,
     private readonly status: Status,
     private readonly wakeWordDetector: WebspeechWakewordDetector
-
-  ) {}
+  ) {
+    console.log('CoreModule: Constructor called.');
+    this.tabManager = new TabManager();
+  }
 
   public async init(config: CoreConfig): Promise<void> {
+    this.config = config;
     await this.uiHandler.init(config.uiConfig);
-    await this.nluModule.init(config.transcriptionConfig, config.recognitionConfig);
+    this.setupTabManagement();
+    this.tabManager.start();
+    console.log('CoreModule initialized. Awaiting tab leadership status...');
+  }
+
+  private setupTabManagement(): void {
+    this.tabManager.onBecameLeader = () => {
+      console.log('CoreModule: Tab became leader. Initializing voice components.');
+      this.uiHandler.hidePersistentMessage();
+      this.initializeVoiceComponents();
+    };
+
+    this.tabManager.onBecameStandby = () => {
+      console.log('CoreModule: Tab is in standby.');
+      this.shutdownVoiceComponents();
+      this.uiHandler.showPersistentMessage('Mic is already in use in another tab.');
+    };
+  }
+
+  private async initializeVoiceComponents(): Promise<void> {
+    if (this.areVoiceComponentsInitialized || !this.config) return;
+
+    console.log('CoreModule: Initializing NLU, WakeWord, and binding events.');
+    await this.nluModule.init(this.config.transcriptionConfig, this.config.recognitionConfig);
     this.bindEvents();
+
+    if (this.config.wakeWords) {
+      this.wakeWordDetector.init(this.config.wakeWords, this.config.sleepWords);
+      this.wakeWordDetector.start();
+    }
 
     this.status.set(StatusType.IDLE);
     this.uiHandler.updateUIStatus();
-    console.log('CoreModule initialized with config:', config);
-    if (config.wakeWords) {
-      console.log(`Initializing wake word detector with: ${config.wakeWords.join(', ')}`);
-      console.log(`Sleep words are: ${config.sleepWords ? config.sleepWords.join(', ') : 'none'}`);
-      this.wakeWordDetector.init(config.wakeWords, config.sleepWords);
-      this.wakeWordDetector.start();
-    }
+    this.areVoiceComponentsInitialized = true;
+    this.tabManager.setStatus(StatusType.IDLE);
+  }
+
+  private shutdownVoiceComponents(): void {
+    if (!this.areVoiceComponentsInitialized) return;
+
+    console.log('CoreModule: Shutting down voice components.');
+    this.nluModule.forceStopSession();
+    this.wakeWordDetector.stop();
+    this.status.set(StatusType.IDLE);
+    this.areVoiceComponentsInitialized = false;
   }
 
   private bindEvents(): void {
+    this.status.onChange((newStatus) => {
+      this.tabManager.setStatus(newStatus.value);
+    });
 
     const resettoIdleLogic = () => {
         this.status.set(StatusType.IDLE);
@@ -45,15 +88,10 @@ export class CoreModule {
     };
 
     const onActionFinished = () => {
-      // After processing a command, check if we should continue listening.
       if (this.isListeningModeActive && !this.isRecordingModeActive)  {
-        // If so, just reset the status. The VAD is still running.
-        console.log('[INTERRUPT] Continuing listening mode after action completion.');
         this.status.set(StatusType.LISTENING);
         this.uiHandler.updateUIStatus();
       }
-      // If isListeningModeActive is false, the user must have pressed "STOP".
-      // In that case, the STOP_BUTTON_PRESSED handler has already reset the state to IDLE.
     };
       
     const stopSessionLogic = () => {
@@ -63,7 +101,6 @@ export class CoreModule {
         this.nluModule.forceStopSession();
       }
     };
-
 
     this.eventBus.on(SpeechEvents.RECORD_BUTTON_PRESSED, () => {
       if (!this.isListeningModeActive) {
@@ -81,28 +118,21 @@ export class CoreModule {
       }
     });
     
-    this.eventBus.on(SpeechEvents.STOP_BUTTON_PRESSED, () => {
-      stopSessionLogic();
-    });
-    this.eventBus.on(SpeechEvents.STOP_WORD_DETECTED, () => {
-      stopSessionLogic();
-    });
+    this.eventBus.on(SpeechEvents.STOP_BUTTON_PRESSED, stopSessionLogic);
+    this.eventBus.on(SpeechEvents.STOP_WORD_DETECTED, stopSessionLogic);
 
     this.eventBus.on(SpeechEvents.ERROR_OCCURRED, (error: Error) => {
       if(this.status.get().value!=StatusType.ERROR && this.status.get().value!= StatusType.IDLE){
-        console.log(`MANGO1:${this.status.get().value}`)
         this.status.set(StatusType.ERROR, error.message)
         this.uiHandler.displayError(error)
         stopSessionLogic();
         setTimeout(resettoIdleLogic, 3000);
-        console.log(`MANGO timeout: ${this.status.get().value}`)
       }
     });
 
     this.eventBus.on(SpeechEvents.TRANSCRIPTION_COMPLETED, (transcription: string) => {
       this.wakeWordDetector.checkForStopWord(transcription);
     });
-
 
     this.eventBus.on(SpeechEvents.LISTEN_STARTED, () => {
       this.status.set(StatusType.LISTENING); 
@@ -111,39 +141,24 @@ export class CoreModule {
 
     this.eventBus.on(SpeechEvents.RECORDING_STARTED, () => {
       this.isRecordingModeActive = true;
-      const currentStatus = this.status.get().value;
-        if (currentStatus === StatusType.ERROR) {
-            return; // Do nothing and let the error state persist.
-        }
+      if (this.status.get().value === StatusType.ERROR) return;
       this.status.set(StatusType.RECORDING);
       this.uiHandler.updateUIStatus();
     });
 
     this.eventBus.on(SpeechEvents.RECORDING_STOPPED, () => {
         this.isRecordingModeActive = false;
-        const currentStatus = this.status.get().value;
-        if (currentStatus === StatusType.ERROR) {
-            return; // Do nothing and let the error state persist.
-        }
-        // If we are still in listening mode, we should not change the status.
-        // The VAD will continue to run and listen for wake words.
+        if (this.status.get().value === StatusType.ERROR) return;
         if (this.isListeningModeActive) {
           this.status.set(StatusType.LISTENING);
         } else {
           this.status.set(StatusType.IDLE);
         }
         this.uiHandler.updateUIStatus();  
-      // if (this.isListeningModeActive) {
-      //   this.status.set(StatusType.PROCESSING);
-      //   this.uiHandler.updateUIStatus();
-      // }
     });
 
     this.eventBus.on(SpeechEvents.LISTENING_STOPPED, () => {
-      const currentStatus = this.status.get().value;
-      
-      console.log(`BANANA: Current status is: ${currentStatus}`);
-      if (currentStatus !== StatusType.ERROR) {
+      if (this.status.get().value !== StatusType.ERROR) {
         resettoIdleLogic();
       } 
     });
@@ -156,10 +171,7 @@ export class CoreModule {
         this.uiHandler.updateUIStatus();
       }
       try {
-        const actionPerformed = await this.voiceActuator.performAction(intents);
-        if (!actionPerformed) {
-          ;
-        }
+        await this.voiceActuator.performAction(intents);
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
         this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, err);

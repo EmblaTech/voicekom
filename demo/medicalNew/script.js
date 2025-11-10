@@ -39,17 +39,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   attachUIListeners();
   // Load from localStorage first; if empty, try JSON file; if still empty, seed minimal
   appointments = loadAppointments();
+  // Backfill missing refs for any existing stored appointments
+  if (Array.isArray(appointments) && appointments.length) {
+    let changed = false;
+    appointments = appointments.map(a => {
+      if (a && !a.ref) { changed = true; return { ...a, ref: makeRef() }; }
+      return a;
+    });
+    if (changed) saveAppointments();
+  }
   if (!Array.isArray(appointments) || appointments.length === 0) {
     try {
       const json = await loadFromJsonFile();
       if (Array.isArray(json) && json.length) {
-        appointments = json;
+        // backfill unique refs if missing
+        appointments = (json || []).map(a => ({
+          ...a,
+          ref: a && a.ref ? a.ref : makeRef()
+        }));
         saveAppointments();
       }
     } catch (e) {
       console.warn('Failed to load appointments.json, using minimal seed', e);
       appointments = [
-        makeAppointmentObject('Sample Patient', '0700000000', '2025-11-20', '09:00', 'Dr. Rob', 'Male', [], 'Demo record')
+        makeAppointmentObject('Alex', '0700000000', '2025-11-20', '09:00', 'Dr. Rob', 'Male', ['Wheelchair'], 'Demo record A'),
+        makeAppointmentObject('Ben', '0771234567', '2025-11-21', '10:30', 'Dr. Lee', 'Male', [], 'Demo record B'),
+        makeAppointmentObject('Clara', '0719992211', '2025-11-22', '14:00', 'Dr. Ben', 'Female', ['Allergy'], 'Demo record C')
       ];
       saveAppointments();
     }
@@ -152,7 +167,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const reportTbody = document.getElementById('reportTbody');
     const generateReportBtn = document.getElementById('generateReportBtn');
     const reportTableWrapper = document.getElementById('reportTableWrapper');
-  const reportMeta = document.getElementById('reportMeta');
+    const reportMeta = document.getElementById('reportMeta');
+    const reportActions = document.getElementById('reportActions');
+    const downloadReportBtn = document.getElementById('downloadReportBtn');
 
     const REPORT_COLUMNS = {
       patients: [
@@ -193,43 +210,46 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       reportThead.appendChild(headRow);
 
-      // one demo row depending on type
       reportTbody.innerHTML = '';
-      let cells = [];
+      const rows = [];
       if (type === 'patients') {
-        cells = [
-          'Alex','94767789188','23','Male','09:00','2025-11-06','Dr. David','Room 01',
-          '<span class="pill status-completed">COMPLETED</span>',
-          'Rs. 2,000/=','<span class="pill pay-paid">PAID</span>'
-        ];
-
+        rows.push(
+          ['Alex','94767789188','23','Male','09:00','2025-11-06','Dr. David','Room 01','COMPLETED','Rs. 2,000/=','PAID'],
+          ['Ben','0771234567','31','Male','10:30','2025-11-07','Dr. Lee','Room 02','PENDING','Rs. 1,500/=','PENDING'],
+          ['Clara','0719992211','28','Female','14:00','2025-11-08','Dr. Rob','Room 03','CANCELLED','Rs. 0/=','N/A']
+        );
       } else if (type === 'lab') {
-        cells = [
-          'Alex','Dr. David','Dr. Kevin','Lab 04','NS1 Antigen, Antibodies','2025-11-06','2025-11-10',
-          '<span class="pill status-completed">COMPLETED</span>','Rs. 7,000/=','Rs. 200/=','Rs. 7,200/='
-        ];
-
+        rows.push(
+          ['Alex','Dr. David','Dr. Kevin','Lab 04','NS1 Antigen, Antibodies','2025-11-06','2025-11-10','COMPLETED','Rs. 7,000/=','Rs. 200/=','Rs. 7,200/='],
+          ['Ben','Dr. Lee','Dr. Maya','Lab 02','Full Blood Count','2025-11-07','2025-11-09','PENDING','Rs. 3,500/=','Rs. 150/=','Rs. 3,650/='],
+          ['Clara','Dr. Rob','Dr. Tom','Lab 01','Lipid Profile','2025-11-08','2025-11-08','COMPLETED','Rs. 4,200/=','Rs. 180/=','Rs. 4,380/=']
+        );
       } else if (type === 'payments') {
-        cells = [
-          'Dr. David','General','2025-11-06','General consultation','Alex','Rs. 9,200/=',
-          '33%','Rs. 3,000/=','Rs. 6,000/=','2025-11-11','<span class="pill pay-paid">PAID</span>'
-        ];
+        rows.push(
+          ['Dr. David','General','2025-11-06','General consultation','Alex','Rs. 9,200/=','33%','Rs. 3,000/=','Rs. 6,000/=','2025-11-11','PAID'],
+          ['Dr. Lee','Cardiology','2025-11-07','ECG Test','Ben','Rs. 6,500/=','30%','Rs. 1,950/=','Rs. 4,550/=','2025-11-11','PENDING'],
+          ['Dr. Rob','Orthopedics','2025-11-08','X-Ray','Clara','Rs. 5,200/=','25%','Rs. 1,300/=','Rs. 3,900/=','2025-11-11','PAID']
+        );
       }
 
-      const tr = document.createElement('tr');
-      cells.forEach(html => {
-        const td = document.createElement('td');
-        td.innerHTML = html;
-        tr.appendChild(td);
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        r.forEach(html => {
+          const td = document.createElement('td');
+          td.innerHTML = html;
+          tr.appendChild(td);
+        });
+        reportTbody.appendChild(tr);
       });
-      reportTbody.appendChild(tr);
 
       // meta info
       if (reportMeta){
         reportMeta.classList.remove('hidden');
         reportMeta.innerHTML = `<div>Report Type: <strong>${type.charAt(0).toUpperCase()+type.slice(1)}</strong></div>`;
-        // reportMeta.innerHTML = `<div>Report Type: <strong>${type.charAt(0).toUpperCase()+type.slice(1)}</strong></div><div class="badges"><span class="pill">1 DEMO ROW</span></div>`;
       }
+
+      // show actions
+      reportActions && reportActions.classList.remove('hidden');
     }
 
     function validateReportFilters(){
@@ -253,20 +273,79 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       renderDemoReport(v.type);
       if (reportTableWrapper) reportTableWrapper.classList.remove('hidden');
-      showToast('Report generated (0 rows)');
+      showToast('Report generated (3 demo rows)');
     });
 
     // Changing report type hides existing table until regenerated
     reportTypeRadios.forEach(r => r.addEventListener('change', ()=> {
       if (reportTableWrapper) reportTableWrapper.classList.add('hidden');
       reportMeta && reportMeta.classList.add('hidden');
+      reportActions && reportActions.classList.add('hidden');
     }));
     document.querySelectorAll('input[name="reportDoctor"]').forEach(cb => cb.addEventListener('change', ()=> {
       if (reportTableWrapper) reportTableWrapper.classList.add('hidden');
       reportMeta && reportMeta.classList.add('hidden');
+      reportActions && reportActions.classList.add('hidden');
     }));
-    reportStartInput && reportStartInput.addEventListener('change', ()=> { reportTableWrapper?.classList.add('hidden'); reportMeta && reportMeta.classList.add('hidden'); });
-    reportEndInput && reportEndInput.addEventListener('change', ()=> { reportTableWrapper?.classList.add('hidden'); reportMeta && reportMeta.classList.add('hidden'); });
+    reportStartInput && reportStartInput.addEventListener('change', ()=> { reportTableWrapper?.classList.add('hidden'); reportMeta && reportMeta.classList.add('hidden'); reportActions && reportActions.classList.add('hidden'); });
+    reportEndInput && reportEndInput.addEventListener('change', ()=> { reportTableWrapper?.classList.add('hidden'); reportMeta && reportMeta.classList.add('hidden'); reportActions && reportActions.classList.add('hidden'); });
+
+    // Download report as PDF
+    downloadReportBtn && downloadReportBtn.addEventListener('click', (e) => {
+      const hasJsPDF = !!(window.jspdf && window.jspdf.jsPDF);
+      let hasAutoTable = false;
+      try {
+        if (hasJsPDF) {
+          const { jsPDF } = window.jspdf;
+          const testDoc = new jsPDF();
+          hasAutoTable = typeof testDoc.autoTable === 'function' || (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && typeof window.jspdf.jsPDF.API.autoTable === 'function');
+        }
+      } catch (_) { hasAutoTable = false; }
+      if (!hasJsPDF || !hasAutoTable) {
+        showToast('PDF libraries not loaded', true);
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+      // Title
+      const type = getSelectedReportType();
+      const title = `Report - ${type ? type.charAt(0).toUpperCase()+type.slice(1) : ''}`;
+      doc.setFontSize(14);
+      doc.text(title, 40, 40);
+
+      // Build table data from DOM
+      const headers = Array.from(reportThead.querySelectorAll('th')).map(th => th.textContent.trim());
+      const body = Array.from(reportTbody.querySelectorAll('tr')).map(tr =>
+        Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim())
+      );
+
+      doc.autoTable({
+        startY: 60,
+        head: [headers],
+        body,
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fillColor: [11, 121, 208] },
+        theme: 'striped'
+      });
+
+      if (e.shiftKey) {
+        // Auto download if Shift is held
+        doc.save('report.pdf');
+        showToast('PDF downloaded');
+      } else {
+        // Open in a new tab by default; fallback to download if popup blocked
+        const blob = doc.output('blob');
+        const blobUrl = URL.createObjectURL(blob);
+        const win = window.open(blobUrl, '_blank');
+        if (!win || win.closed) {
+          doc.save('report.pdf');
+          showToast('Popup blocked. Downloaded instead.');
+        } else {
+          showToast('PDF opened in new tab. Use browser Save to download.');
+        }
+      }
+    });
 
     // note: profile menu removed (undoing last changes)
   }
@@ -486,6 +565,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ---------- helpers ----------
   function makeAppointmentObject(patientName, contactNumber, apptDate, apptTime, doctor, gender, assistances, notes) {
     return {
+      ref: makeRef(),
       patientName,
       contactNumber,
       apptDate,
@@ -495,6 +575,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       assistance: assistances || [],
       notes: notes || ''
     };
+  }
+
+  function makeRef(){
+    return 'APT-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
   }
 
   function formatDateTime(d, t) {

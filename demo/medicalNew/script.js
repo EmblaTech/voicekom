@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) {
       console.warn('Failed to load appointments.json, using minimal seed', e);
       appointments = [
-        makeAppointmentObject('Sample Patient', '0700000000', '2025-11-20', '09:00', 'Dr. Chen', 'Male', [], 'Demo record')
+        makeAppointmentObject('Sample Patient', '0700000000', '2025-11-20', '09:00', 'Dr. Rob', 'Male', [], 'Demo record')
       ];
       saveAppointments();
     }
@@ -194,12 +194,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rows = appointments.filter(a => {
       if (!q) return true;
       const assistanceStr = Array.isArray(a.assistance) ? a.assistance.join(', ').toLowerCase() : String(a.assistance || '').toLowerCase();
+      // build a searchable date/time string using the same formatting as display plus raw values for flexibility
+      const dateTimeDisplay = formatDateTime(a.apptDate, a.apptTime).toLowerCase();
+      const rawDate = (a.apptDate || '').toLowerCase();
+      const rawTime = (a.apptTime || '').toLowerCase();
       return (
         (a.patientName && a.patientName.toLowerCase().includes(q)) ||
         (a.doctor && a.doctor.toLowerCase().includes(q)) ||
         (a.contactNumber && String(a.contactNumber).toLowerCase().includes(q)) ||
         (a.gender && String(a.gender).toLowerCase().includes(q)) ||
-        (assistanceStr && assistanceStr.includes(q))
+        (assistanceStr && assistanceStr.includes(q)) ||
+        (dateTimeDisplay && dateTimeDisplay.includes(q)) ||
+        (rawDate && rawDate.includes(q)) ||
+        (rawTime && rawTime.includes(q))
       );
     });
 

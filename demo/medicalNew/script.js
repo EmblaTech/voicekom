@@ -193,11 +193,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const q = (searchInput.value || '').trim().toLowerCase();
     const rows = appointments.filter(a => {
       if (!q) return true;
+      const assistanceStr = Array.isArray(a.assistance) ? a.assistance.join(', ').toLowerCase() : String(a.assistance || '').toLowerCase();
       return (
-        (a.ref && String(a.ref).toLowerCase().includes(q)) ||
         (a.patientName && a.patientName.toLowerCase().includes(q)) ||
         (a.doctor && a.doctor.toLowerCase().includes(q)) ||
-        (a.contactNumber && String(a.contactNumber).toLowerCase().includes(q))
+        (a.contactNumber && String(a.contactNumber).toLowerCase().includes(q)) ||
+        (a.gender && String(a.gender).toLowerCase().includes(q)) ||
+        (assistanceStr && assistanceStr.includes(q))
       );
     });
 
@@ -213,12 +215,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       const tr = document.createElement('tr');
 
       const dateTime = formatDateTime(a.apptDate, a.apptTime);
+      const assistanceDisplay = Array.isArray(a.assistance) ? a.assistance.join(', ') : (a.assistance || '');
       tr.innerHTML = `
-        <td>${escapeHtml(a.ref)}</td>
         <td>${escapeHtml(a.patientName)}</td>
         <td>${escapeHtml(dateTime)}</td>
         <td>${escapeHtml(a.doctor || '')}</td>
         <td>${escapeHtml(a.contactNumber || '')}</td>
+        <td>${escapeHtml(a.gender || '')}</td>
+        <td>${escapeHtml(assistanceDisplay)}</td>
         <td style="text-align:center"><button class="icon-btn notify-btn" data-ref="${a.ref}" title="Toggle notify">🔔</button></td>
         <td style="text-align:right">
           <div class="row-actions">
@@ -368,9 +372,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ---------- helpers ----------
   function makeAppointmentObject(patientName, contactNumber, apptDate, apptTime, doctor, gender, assistances, notes) {
-    const ref = generateRef();
     return {
-      ref,
       patientName,
       contactNumber,
       apptDate,
@@ -380,13 +382,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       assistance: assistances || [],
       notes: notes || ''
     };
-  }
-
-  function generateRef() {
-    // human-friendly reference no. e.g. AP-20251104-0001
-    const ts = new Date().toISOString().slice(0,10).replace(/-/g,'');
-    const seq = Math.floor(Math.random() * 9000) + 1000; // random for demo
-    return `AP-${ts}-${seq}`;
   }
 
   function formatDateTime(d, t) {

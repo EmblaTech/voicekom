@@ -1,6 +1,5 @@
 [
   {
-    "ref": "MED472918",
     "patientName": "John Doe",
     "contactNumber": "0712345678",
     "apptDate": "2025-11-12",
@@ -11,7 +10,6 @@
     "notes": "Follow-up visit"
   },
   {
-    "ref": "MED755669",
     "patientName": "Jane Smith",
     "contactNumber": "0779876543",
     "apptDate": "2025-11-12",
@@ -22,7 +20,6 @@
     "notes": "Allergy review"
   },
   {
-    "ref": "MED384751",
     "patientName": "Ali Khan",
     "contactNumber": "0701122334",
     "apptDate": "2025-11-13",
@@ -33,7 +30,6 @@
     "notes": "Requires ramp"
   },
   {
-    "ref": "MED917520",
     "patientName": "Nirmala Silva",
     "contactNumber": "0712233445",
     "apptDate": "2025-11-13",
@@ -44,7 +40,6 @@
     "notes": "Pediatric check"
   },
   {
-    "ref": "MED236894",
     "patientName": "Ravi Kumar",
     "contactNumber": "0703344556",
     "apptDate": "2025-11-14",
@@ -55,7 +50,6 @@
     "notes": "Vaccination"
   },
   {
-    "ref": "MED805613",
     "patientName": "Geetha Perera",
     "contactNumber": "0774455667",
     "apptDate": "2025-11-15",
@@ -66,7 +60,6 @@
     "notes": "Orthopedic review"
   },
   {
-    "ref": "MED194782",
     "patientName": "Pradeep Silva",
     "contactNumber": "0715566778",
     "apptDate": "2025-11-15",
@@ -77,7 +70,6 @@
     "notes": "General check"
   },
   {
-    "ref": "MED673540",
     "patientName": "Anu Wijeratne",
     "contactNumber": "0706677889",
     "apptDate": "2025-11-16",
@@ -88,7 +80,6 @@
     "notes": "X-ray review"
   },
   {
-    "ref": "MED842159",
     "patientName": "Rohana Dias",
     "contactNumber": "0777788990",
     "apptDate": "2025-11-16",
@@ -99,7 +90,6 @@
     "notes": "Physio consult"
   },
   {
-    "ref": "MED510726",
     "patientName": "Shehan Perera",
     "contactNumber": "0718899001",
     "apptDate": "2025-11-17",
@@ -110,7 +100,6 @@
     "notes": "Lipid panel review"
   },
   {
-    "ref": "MED329475",
     "patientName": "Dilani Weerasinghe",
     "contactNumber": "0719900112",
     "apptDate": "2025-11-17",
@@ -121,7 +110,6 @@
     "notes": "Lab results"
   },
   {
-    "ref": "MED768230",
     "patientName": "Kamal Fernando",
     "contactNumber": "0770011223",
     "apptDate": "2025-11-18",
@@ -132,7 +120,6 @@
     "notes": "New patient"
   },
   {
-    "ref": "MED457981",
     "patientName": "Ishara Jayasinghe",
     "contactNumber": "0701122003",
     "apptDate": "2025-11-18",
@@ -143,7 +130,6 @@
     "notes": "Cardio consult"
   },
   {
-    "ref": "MED982304",
     "patientName": "Tharindu Malshan",
     "contactNumber": "0712233004",
     "apptDate": "2025-11-19",
@@ -154,7 +140,6 @@
     "notes": "Pediatric follow-up"
   },
   {
-    "ref": "MED615478",
     "patientName": "Sanduni Perera",
     "contactNumber": "0773344005",
     "apptDate": "2025-11-19",

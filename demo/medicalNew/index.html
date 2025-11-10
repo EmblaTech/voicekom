@@ -124,6 +124,26 @@
       vertical-align:middle;
     }
 
+    /* Reports table header highlight */
+    .report-table thead th{
+      background:#f3f7fd;
+      border-bottom-color:#dbe8fb;
+    }
+    .report-table{
+      border-radius:10px;
+      overflow:hidden;
+    }
+    .report-table tbody tr:nth-child(even){background:#fafcff}
+    .report-meta{display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px 0;font-size:0.85rem;color:var(--muted)}
+    .report-meta .badges{display:flex;gap:8px;align-items:center}
+    .pill{display:inline-block;padding:4px 8px;border-radius:20px;font-size:0.7rem;font-weight:600;letter-spacing:.5px;background:#eef4fb;color:#333}
+    .pill.status-completed{background:#e6f9ef;color:#067447}
+    .pill.status-pending{background:#fff8e6;color:#946200}
+    .pill.status-cancelled{background:#fdecec;color:#b30721}
+    .pill.pay-paid{background:#e6f9ef;color:#067447}
+    .pill.pay-pending{background:#fff8e6;color:#946200}
+    .pill.pay-none{background:#eef4fb;color:#555}
+
     .row-actions {
       display:flex;
       gap:8px;
@@ -502,11 +522,18 @@
           </div>
         </div>
       </form>
+
+      <!-- Report results table (columns depend on selected report type) -->
+      <div id="reportTableWrapper" class="table-wrapper hidden" aria-live="polite" style="margin-top:14px;">
+        <div id="reportMeta" class="report-meta hidden" aria-live="polite"></div>
+        <table class="table report-table" aria-label="Report results">
+          <thead id="reportThead"></thead>
+          <tbody id="reportTbody">
+            <!-- rows inserted by script.js after Generate -->
+          </tbody>
+        </table>
+      </div>
     </div>
-
-
-
-
 
     <div id="help-page" class="card hidden" style="margin-top:18px;">
       <form class="help-form" voice.name="Help Form">

@@ -1,14 +1,3 @@
-
-///////
-/* script.js
-   Implements:
-   - Appointments list (rendering, create, edit, delete)
-   - UI toggles: stay in Appointments tab while switching between list and form
-   - Toast notifications (top-right)
-   - Basic search (client-side) and non-functional pagination UI (UI only)
-   All code changes confined to this file and index.html.
-*/
-
 document.addEventListener('DOMContentLoaded', async () => {
   // ---------- app state ----------
   const STORAGE_KEY = 'clinic_appointments_v1';
@@ -155,12 +144,129 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('nextPage').addEventListener('click', () => {
       showToast('Next page (not implemented)');
     });
+    // ---------- Reports: setup (table hidden until Generate) ----------
+    const reportTypeRadios = document.querySelectorAll('input[name="reportType"]');
+    const reportStartInput = document.getElementById('reportStart');
+    const reportEndInput = document.getElementById('reportEnd');
+    const reportThead = document.getElementById('reportThead');
+    const reportTbody = document.getElementById('reportTbody');
+    const generateReportBtn = document.getElementById('generateReportBtn');
+    const reportTableWrapper = document.getElementById('reportTableWrapper');
+  const reportMeta = document.getElementById('reportMeta');
 
-    // reports (non-functional placeholder)
-    const genBtn = document.getElementById('generateReportBtn');
-    if (genBtn) {
-      genBtn.addEventListener('click', () => showToast('Generating report (UI only)'));
+    const REPORT_COLUMNS = {
+      patients: [
+        'Patient Name','Patient Contact','Age','Gender',
+        'Appointment Time','Appointment Date','Doctor name',
+        'Room Number','Status','Consultation Fee','Payment'
+      ],
+      lab: [
+        'Patient Name','Doctor (referred to lab)','Lab Operator','Lab Number',
+        'Tests','Sampled Date','Result Date','Status',
+        'Test Cost','Lab maintenance cost','Total cost'
+      ],
+      payments: [
+        'Doctor Name','Specialization','Service Date','Service Name',
+        'Patient Name','Amount charged (patient)','Doctor commission',
+        'Doctor payout','Hospital payout','Payment date','Status'
+      ]
+    };
+
+    function getSelectedReportType(){
+      const r = document.querySelector('input[name="reportType"]:checked');
+      let v = (r && r.value) ? String(r.value).trim().toLowerCase() : '';
+      return REPORT_COLUMNS[v] ? v : '';
     }
+
+    function renderDemoReport(type){
+      if (!type) return;
+      if (!reportThead || !reportTbody) return;
+      const cols = REPORT_COLUMNS[type];
+      if (!cols) return;
+      // header
+      reportThead.innerHTML = '';
+      const headRow = document.createElement('tr');
+      cols.forEach(label => {
+        const th = document.createElement('th');
+        th.textContent = label;
+        headRow.appendChild(th);
+      });
+      reportThead.appendChild(headRow);
+
+      // one demo row depending on type
+      reportTbody.innerHTML = '';
+      let cells = [];
+      if (type === 'patients') {
+        cells = [
+          'Alex','94767789188','23','Male','09:00','2025-11-06','Dr. David','Room 01',
+          '<span class="pill status-completed">COMPLETED</span>',
+          'Rs. 2,000/=','<span class="pill pay-paid">PAID</span>'
+        ];
+
+      } else if (type === 'lab') {
+        cells = [
+          'Alex','Dr. David','Dr. Kevin','Lab 04','NS1 Antigen, Antibodies','2025-11-06','2025-11-10',
+          '<span class="pill status-completed">COMPLETED</span>','Rs. 7,000/=','Rs. 200/=','Rs. 7,200/='
+        ];
+
+      } else if (type === 'payments') {
+        cells = [
+          'Dr. David','General','2025-11-06','General consultation','Alex','Rs. 9,200/=',
+          '33%','Rs. 3,000/=','Rs. 6,000/=','2025-11-11','<span class="pill pay-paid">PAID</span>'
+        ];
+      }
+
+      const tr = document.createElement('tr');
+      cells.forEach(html => {
+        const td = document.createElement('td');
+        td.innerHTML = html;
+        tr.appendChild(td);
+      });
+      reportTbody.appendChild(tr);
+
+      // meta info
+      if (reportMeta){
+        reportMeta.classList.remove('hidden');
+        reportMeta.innerHTML = `<div>Report Type: <strong>${type.charAt(0).toUpperCase()+type.slice(1)}</strong></div>`;
+        // reportMeta.innerHTML = `<div>Report Type: <strong>${type.charAt(0).toUpperCase()+type.slice(1)}</strong></div><div class="badges"><span class="pill">1 DEMO ROW</span></div>`;
+      }
+    }
+
+    function validateReportFilters(){
+      const type = getSelectedReportType();
+      if (!type) return { ok:false, message:'Select a report type' };
+      const doctors = Array.from(document.querySelectorAll('input[name="reportDoctor"]:checked')).map(d=>d.value);
+      if (doctors.length === 0) return { ok:false, message:'Select at least one doctor' };
+      const start = reportStartInput?.value;
+      const end = reportEndInput?.value;
+      if (!start || !end) return { ok:false, message:'Select start and end dates' };
+      if (start > end) return { ok:false, message:'Start date cannot be after end date' };
+      return { ok:true, type, doctors, start, end };
+    }
+
+    generateReportBtn && generateReportBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const v = validateReportFilters();
+      if (!v.ok){
+        showToast(v.message, true);
+        return;
+      }
+      renderDemoReport(v.type);
+      if (reportTableWrapper) reportTableWrapper.classList.remove('hidden');
+      showToast('Report generated (0 rows)');
+    });
+
+    // Changing report type hides existing table until regenerated
+    reportTypeRadios.forEach(r => r.addEventListener('change', ()=> {
+      if (reportTableWrapper) reportTableWrapper.classList.add('hidden');
+      reportMeta && reportMeta.classList.add('hidden');
+    }));
+    document.querySelectorAll('input[name="reportDoctor"]').forEach(cb => cb.addEventListener('change', ()=> {
+      if (reportTableWrapper) reportTableWrapper.classList.add('hidden');
+      reportMeta && reportMeta.classList.add('hidden');
+    }));
+    reportStartInput && reportStartInput.addEventListener('change', ()=> { reportTableWrapper?.classList.add('hidden'); reportMeta && reportMeta.classList.add('hidden'); });
+    reportEndInput && reportEndInput.addEventListener('change', ()=> { reportTableWrapper?.classList.add('hidden'); reportMeta && reportMeta.classList.add('hidden'); });
 
     // note: profile menu removed (undoing last changes)
   }
@@ -455,26 +561,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   deleteModal.addEventListener('click', (e) => {
     if (e.target === deleteModal) closeDeleteModal();
   });
-
-  // Download updated JSON to simulate persisting to file in a static environment
-  // function saveAppointmentsToJson() {
-  //   try {
-  //     const blob = new Blob([JSON.stringify(appointments, null, 2)], { type: 'application/json' });
-  //     const url = URL.createObjectURL(blob);
-  //     const a = document.createElement('a');
-  //     a.href = url;
-  //     a.download = 'appointments.json';
-  //     a.style.display = 'none';
-  //     document.body.appendChild(a);
-  //     a.click();
-  //     setTimeout(() => {
-  //       document.body.removeChild(a);
-  //       URL.revokeObjectURL(url);
-  //     }, 0);
-  //   } catch (e) {
-  //     console.warn('Failed to trigger JSON download', e);
-  //   }
-  // }
 
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';

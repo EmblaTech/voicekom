@@ -212,23 +212,69 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       reportTbody.innerHTML = '';
       const rows = [];
+      // if (type === 'patients') {
+      //   rows.push(
+      //     ['Alex', '94767789188', '23', 'Male', '9:00am', '2025-11-06', 'Dr. Lee', 'Room 01', 'COMPLETED', 'Rs. 2,000/=', 'PAID'],
+      //     ['Charles', '94789134261', '47', 'Male', '12:00pm', '2025-11-07', 'Dr. Rob', 'Room 03', 'COMPLETED', 'Rs. 2,300/=', 'PENDING'],
+      //     ['Lucy', '9471568221', '5', 'Female', '3:00pm', '2025-11-07', 'Dr. Lee', 'Room 01', 'COMPLETED', 'Rs. 2,000/=', 'PENDING'],
+      //     ['Amanda', '94715558769', '31', 'Female', '3:45pm', '2025-11-07', 'Dr. Ben', 'Room 03', 'CANCELLED', '-', '-']
+      //   );
+
+      // } else if (type === 'lab') {
+      //   rows.push(
+      //     ['Alex', 'Dr. Ben', 'Mr. Kevin', 'Lab 04', 'NS1 Antigen, Antibodies', '2025-11-06', '2025-11-10', 'COMPLETED', 'Rs. 7,000/=', 'Rs. 200/=', 'Rs. 7,200/='],
+      //     ['Lucy', 'Dr. Ben', 'Mrs. Spencer', 'Lab 04', 'PCR, Rapid Antibodies', '2025-11-07', '2025-11-11', 'COMPLETED', 'Rs. 7,300/=', 'Rs. 200/=', 'Rs. 7,500/='],
+      //     ['Steve', 'Dr. Rob', 'Mr. Peter', 'Lab 02', 'MRI', '2025-11-08', '2025-11-09', 'PENDING', 'Rs. 19,000/=', 'Rs. 1,000/=', 'Rs. 20,000/=']
+      //   );
+
+      // } else if (type === 'payments') {
+      //   rows.push(
+      //     ['Dr. Rob', 'General', '2025-11-06', 'General consultation', 'Alex', 'Rs. 9,200/=', '33%', 'Rs. 3,000/=', 'Rs. 6,000/=', '2025-11-11', 'PAID'],
+      //     ['Dr. Lee', 'Neurology', '2025-11-08', 'Scan', 'Steve', 'Rs. 23,000/=', '35%', 'Rs. 8,100/=', 'Rs. 13,000/=', '2025-11-12', 'PENDING']
+      //   );
+        
+      // }
+
       if (type === 'patients') {
         rows.push(
-          ['Alex','94767789188','23','Male','09:00','2025-11-06','Dr. David','Room 01','COMPLETED','Rs. 2,000/=','PAID'],
-          ['Ben','0771234567','31','Male','10:30','2025-11-07','Dr. Lee','Room 02','PENDING','Rs. 1,500/=','PENDING'],
-          ['Clara','0719992211','28','Female','14:00','2025-11-08','Dr. Rob','Room 03','CANCELLED','Rs. 0/=','N/A']
+          ['Alex', '94767789188', '23', 'Male', '9:00am', '2025-11-06', 'Dr. Lee', 'Room 01', 'COMPLETED', 'Rs. 2,000/=', 'PAID'],
+          ['Charles', '94789134261', '47', 'Male', '12:10pm', '2025-11-07', 'Dr. Rob', 'Room 03', 'COMPLETED', 'Rs. 2,300/=', 'PENDING'],
+          ['Lucy', '9471568221', '5', 'Female', '3:00pm', '2025-11-07', 'Dr. Lee', 'Room 01', 'COMPLETED', 'Rs. 2,000/=', 'PENDING'],
+          ['Amanda', '94715558769', '31', 'Female', '3:45pm', '2025-11-07', 'Dr. Ben', 'Room 03', 'CANCELLED', '-', '-'],
+          ['Ben', '0771234567', '31', 'Male', '10:30am', '2025-11-08', 'Dr. Rob', 'Room 02', 'PENDING', 'Rs. 1,500/=', 'PENDING'],
+          ['Clara', '0719992211', '28', 'Female', '2:00pm', '2025-11-08', 'Dr. Rob', 'Room 03', 'CANCELLED', '-', '-'],
+          ['Diana', '94770011223', '39', 'Female', '11:15am', '2025-11-09', 'Dr. Lee', 'Room 02', 'COMPLETED', 'Rs. 3,500/=', 'PAID'],
+          ['Ethan', '94770033445', '52', 'Male', '8:30am', '2025-11-09', 'Dr. Ben', 'Room 01', 'PENDING', 'Rs. 4,200/=', 'PENDING'],
+          ['Fiona', '94770055667', '29', 'Female', '4:00pm', '2025-11-10', 'Dr. Lee', 'Room 04', 'COMPLETED', 'Rs. 1,800/=', 'PAID'],
+          ['George', '94770077889', '45', 'Male', '9:45am', '2025-11-10', 'Dr. Rob', 'Room 02', 'COMPLETED', 'Rs. 2,700/=', 'PAID']
         );
+
       } else if (type === 'lab') {
         rows.push(
-          ['Alex','Dr. David','Dr. Kevin','Lab 04','NS1 Antigen, Antibodies','2025-11-06','2025-11-10','COMPLETED','Rs. 7,000/=','Rs. 200/=','Rs. 7,200/='],
-          ['Ben','Dr. Lee','Dr. Maya','Lab 02','Full Blood Count','2025-11-07','2025-11-09','PENDING','Rs. 3,500/=','Rs. 150/=','Rs. 3,650/='],
-          ['Clara','Dr. Rob','Dr. Tom','Lab 01','Lipid Profile','2025-11-08','2025-11-08','COMPLETED','Rs. 4,200/=','Rs. 180/=','Rs. 4,380/=']
+          ['Alex', 'Dr. Lee', 'Mr. Peter', 'Lab 04', 'NS1 Antigen, Antibodies', '2025-11-06', '2025-11-10', 'COMPLETED', 'Rs. 7,000/=', 'Rs. 200/=', 'Rs. 7,200/='],
+          ['Lucy', 'Dr. Lee', 'Mrs. Spencer', 'Lab 04', 'PCR, Rapid Antibodies', '2025-11-07', '2025-11-11', 'COMPLETED', 'Rs. 7,300/=', 'Rs. 200/=', 'Rs. 7,500/='],
+          ['Ethan', 'Dr. Ben', 'Mr. Peter', 'Lab 02', 'Liver Panel', '2025-11-08', '2025-11-09', 'PENDING', 'Rs. 4,800/=', 'Rs. 250/=', 'Rs. 5,050/='],
+          ['Ben', 'Dr. Rob', 'Mrs. Spencer', 'Lab 02', 'Full Blood Count', '2025-11-07', '2025-11-09', 'PENDING', 'Rs. 3,500/=', 'Rs. 150/=', 'Rs. 3,650/='],
+          ['Diana', 'Dr. Lee', 'Mr. Kevin', 'Lab 03', 'Thyroid Profile', '2025-11-09', '2025-11-10', 'COMPLETED', 'Rs. 2,900/=', 'Rs. 150/=', 'Rs. 3,050/='],
+          ['Fiona', 'Dr. Lee', 'Mrs. Spencer', 'Lab 04', 'Rapid Antibodies', '2025-11-10', '2025-11-10', 'COMPLETED', 'Rs. 1,200/=', 'Rs. 100/=', 'Rs. 1,300/='],
+          ['George', 'Dr. Rob', 'Mr. Peter', 'Lab 01', 'Lipid Profile', '2025-11-08', '2025-11-08', 'COMPLETED', 'Rs. 4,200/=', 'Rs. 180/=', 'Rs. 4,380/='],
+          ['Clara', 'Dr. Rob', 'Mr. Peter', 'Lab 01', 'X-Ray (Chest)', '2025-11-08', '2025-11-08', 'COMPLETED', 'Rs. 2,000/=', 'Rs. 120/=', 'Rs. 2,120/='],
+          ['Amanda', 'Dr. Ben', 'Mr. Kevin', 'Lab 04', 'Urine Analysis', '2025-11-07', '2025-11-07', 'CANCELLED', '-', '-', '-'],
+          ['Charles', 'Dr. Rob', 'Mr. Kevin', 'Lab 03', 'ECG Report (Holter)', '2025-11-07', '2025-11-08', 'COMPLETED', 'Rs. 6,000/=', 'Rs. 300/=', 'Rs. 6,300/=']
         );
+
       } else if (type === 'payments') {
         rows.push(
-          ['Dr. David','General','2025-11-06','General consultation','Alex','Rs. 9,200/=','33%','Rs. 3,000/=','Rs. 6,000/=','2025-11-11','PAID'],
-          ['Dr. Lee','Cardiology','2025-11-07','ECG Test','Ben','Rs. 6,500/=','30%','Rs. 1,950/=','Rs. 4,550/=','2025-11-11','PENDING'],
-          ['Dr. Rob','Orthopedics','2025-11-08','X-Ray','Clara','Rs. 5,200/=','25%','Rs. 1,300/=','Rs. 3,900/=','2025-11-11','PAID']
+          ['Dr. Lee', 'General', '2025-11-06', 'General consultation', 'Alex', 'Rs. 9,200/=', '33%', 'Rs. 3,036/=', 'Rs. 6,164/=', '2025-11-11', 'PAID'],
+          ['Dr. Rob', 'Cardiology', '2025-11-07', 'ECG Test', 'Charles', 'Rs. 6,500/=', '30%', 'Rs. 1,950/=', 'Rs. 4,550/=', '2025-11-11', 'PENDING'],
+          ['Dr. Lee', 'Pediatrics', '2025-11-07', 'Vaccination', 'Lucy', 'Rs. 2,000/=', '40%', 'Rs. 800/=', 'Rs. 1,200/=', '2025-11-12', 'PENDING'],
+          ['Dr. Ben', 'General', '2025-11-08', 'Minor Procedure', 'Ethan', 'Rs. 4,200/=', '35%', 'Rs. 1,470/=', 'Rs. 2,730/=', '2025-11-12', 'PENDING'],
+          ['Dr. Rob', 'Orthopedics', '2025-11-08', 'X-Ray', 'Clara', 'Rs. 5,200/=', '25%', 'Rs. 1,300/=', 'Rs. 3,900/=', '2025-11-11', 'PAID'],
+          ['Dr. Lee', 'Neurology', '2025-11-08', 'Scan', 'Steve', 'Rs. 23,000/=', '35%', 'Rs. 8,050/=', 'Rs. 14,950/=', '2025-11-12', 'PENDING'],
+          ['Dr. Ben', 'General', '2025-11-07', 'Consultation', 'Amanda', 'Rs. 0/=', '0%', 'Rs. 0/=', 'Rs. 0/=', '-', 'CANCELLED'],
+          ['Dr. Lee', 'General', '2025-11-09', 'Follow-up', 'Diana', 'Rs. 3,500/=', '33%', 'Rs. 1,155/=', 'Rs. 2,345/=', '2025-11-11', 'PAID'],
+          ['Dr. Ben', 'Imaging', '2025-11-10', 'MRI (referral)', 'Fiona', 'Rs. 19,000/=', '40%', 'Rs. 7,600/=', 'Rs. 11,400/=', '2025-11-13', 'PAID'],
+          ['Dr. Rob', 'General', '2025-11-10', 'Consultation', 'George', 'Rs. 2,700/=', '30%', 'Rs. 810/=', 'Rs. 1,890/=', '2025-11-11', 'PAID']
         );
       }
 

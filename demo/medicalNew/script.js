@@ -175,15 +175,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       patients: [
         'Patient Name','Patient Contact','Age','Gender',
         'Appointment Time','Appointment Date','Doctor name',
-        'Room Number','Status','Consultation Fee','Payment'
+        'Status','Consultation Fee','Payment'
       ],
       lab: [
         'Patient Name','Doctor (referred to lab)','Lab Operator','Lab Number',
-        'Tests','Sampled Date','Result Date','Status',
+        'Tests','Result Date','Status',
         'Test Cost','Lab maintenance cost','Total cost'
       ],
       payments: [
-        'Doctor Name','Specialization','Service Date','Service Name',
+        'Doctor Name','Specialization','Service Name',
         'Patient Name','Amount charged (patient)','Doctor commission',
         'Doctor payout','Hospital payout','Payment date','Status'
       ]
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return REPORT_COLUMNS[v] ? v : '';
     }
 
-    function renderDemoReport(type){
+    function renderDemoReport(type, doctors, start, end){
       if (!type) return;
       if (!reportThead || !reportTbody) return;
       const cols = REPORT_COLUMNS[type];
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       reportThead.appendChild(headRow);
 
       reportTbody.innerHTML = '';
-      const rows = [];
+      const allRows = [];
       // if (type === 'patients') {
       //   rows.push(
       //     ['Alex', '94767789188', '23', 'Male', '9:00am', '2025-11-06', 'Dr. Lee', 'Room 01', 'COMPLETED', 'Rs. 2,000/=', 'PAID'],
@@ -235,8 +235,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         
       // }
 
-      if (type === 'patients') {
-        rows.push(
+  let renderedCount = 0;
+  if (type === 'patients') {
+        allRows.push(
           ['Alex', '94767789188', '23', 'Male', '9:00am', '2025-11-06', 'Dr. Lee', 'Room 01', 'COMPLETED', 'Rs. 2,000/=', 'PAID'],
           ['Charles', '94789134261', '47', 'Male', '12:10pm', '2025-11-07', 'Dr. Rob', 'Room 03', 'COMPLETED', 'Rs. 2,300/=', 'PENDING'],
           ['Lucy', '9471568221', '5', 'Female', '3:00pm', '2025-11-07', 'Dr. Lee', 'Room 01', 'COMPLETED', 'Rs. 2,000/=', 'PENDING'],
@@ -248,54 +249,78 @@ document.addEventListener('DOMContentLoaded', async () => {
           ['Fiona', '94770055667', '29', 'Female', '4:00pm', '2025-11-10', 'Dr. Lee', 'Room 04', 'COMPLETED', 'Rs. 1,800/=', 'PAID'],
           ['George', '94770077889', '45', 'Male', '9:45am', '2025-11-10', 'Dr. Rob', 'Room 02', 'COMPLETED', 'Rs. 2,700/=', 'PAID']
         );
+        const dateIdx = 5, docIdx = 6;
+        const filtered = allRows.filter(r => doctors.includes(r[docIdx]) && withinRange(r[dateIdx], start, end));
+        renderRows(filtered);
+        renderedCount = filtered.length;
 
       } else if (type === 'lab') {
-        rows.push(
-          ['Alex', 'Dr. Lee', 'Mr. Peter', 'Lab 04', 'NS1 Antigen, Antibodies', '2025-11-06', '2025-11-10', 'COMPLETED', 'Rs. 7,000/=', 'Rs. 200/=', 'Rs. 7,200/='],
-          ['Lucy', 'Dr. Lee', 'Mrs. Spencer', 'Lab 04', 'PCR, Rapid Antibodies', '2025-11-07', '2025-11-11', 'COMPLETED', 'Rs. 7,300/=', 'Rs. 200/=', 'Rs. 7,500/='],
-          ['Ethan', 'Dr. Ben', 'Mr. Peter', 'Lab 02', 'Liver Panel', '2025-11-08', '2025-11-09', 'PENDING', 'Rs. 4,800/=', 'Rs. 250/=', 'Rs. 5,050/='],
-          ['Ben', 'Dr. Rob', 'Mrs. Spencer', 'Lab 02', 'Full Blood Count', '2025-11-07', '2025-11-09', 'PENDING', 'Rs. 3,500/=', 'Rs. 150/=', 'Rs. 3,650/='],
-          ['Diana', 'Dr. Lee', 'Mr. Kevin', 'Lab 03', 'Thyroid Profile', '2025-11-09', '2025-11-10', 'COMPLETED', 'Rs. 2,900/=', 'Rs. 150/=', 'Rs. 3,050/='],
-          ['Fiona', 'Dr. Lee', 'Mrs. Spencer', 'Lab 04', 'Rapid Antibodies', '2025-11-10', '2025-11-10', 'COMPLETED', 'Rs. 1,200/=', 'Rs. 100/=', 'Rs. 1,300/='],
-          ['George', 'Dr. Rob', 'Mr. Peter', 'Lab 01', 'Lipid Profile', '2025-11-08', '2025-11-08', 'COMPLETED', 'Rs. 4,200/=', 'Rs. 180/=', 'Rs. 4,380/='],
-          ['Clara', 'Dr. Rob', 'Mr. Peter', 'Lab 01', 'X-Ray (Chest)', '2025-11-08', '2025-11-08', 'COMPLETED', 'Rs. 2,000/=', 'Rs. 120/=', 'Rs. 2,120/='],
-          ['Amanda', 'Dr. Ben', 'Mr. Kevin', 'Lab 04', 'Urine Analysis', '2025-11-07', '2025-11-07', 'CANCELLED', '-', '-', '-'],
-          ['Charles', 'Dr. Rob', 'Mr. Kevin', 'Lab 03', 'ECG Report (Holter)', '2025-11-07', '2025-11-08', 'COMPLETED', 'Rs. 6,000/=', 'Rs. 300/=', 'Rs. 6,300/=']
+        allRows.push(
+          ['Alex', 'Dr. Lee', 'Mr. Peter', 'Lab 04', 'NS1 Antigen, Antibodies', '2025-11-10', 'COMPLETED', 'Rs. 7,000/=', 'Rs. 200/=', 'Rs. 7,200/='],
+          ['Lucy', 'Dr. Lee', 'Mrs. Spencer', 'Lab 04', 'PCR, Rapid Antibodies', '2025-11-11', 'COMPLETED', 'Rs. 7,300/=', 'Rs. 200/=', 'Rs. 7,500/='],
+          ['Ethan', 'Dr. Ben', 'Mr. Peter', 'Lab 02', 'Liver Panel', '2025-11-09', 'PENDING', 'Rs. 4,800/=', 'Rs. 250/=', 'Rs. 5,050/='],
+          ['Ben', 'Dr. Rob', 'Mrs. Spencer', 'Lab 02', 'Full Blood Count', '2025-11-09', 'PENDING', 'Rs. 3,500/=', 'Rs. 150/=', 'Rs. 3,650/='],
+          ['Diana', 'Dr. Lee', 'Mr. Kevin', 'Lab 03', 'Thyroid Profile', '2025-11-10', 'COMPLETED', 'Rs. 2,900/=', 'Rs. 150/=', 'Rs. 3,050/='],
+          ['Fiona', 'Dr. Lee', 'Mrs. Spencer', 'Lab 04', 'Rapid Antibodies', '2025-11-10', 'COMPLETED', 'Rs. 1,200/=', 'Rs. 100/=', 'Rs. 1,300/='],
+          ['George', 'Dr. Rob', 'Mr. Peter', 'Lab 01', 'Lipid Profile', '2025-11-08', 'COMPLETED', 'Rs. 4,200/=', 'Rs. 180/=', 'Rs. 4,380/='],
+          ['Clara', 'Dr. Rob', 'Mr. Peter', 'Lab 01', 'X-Ray (Chest)', '2025-11-08', 'COMPLETED', 'Rs. 2,000/=', 'Rs. 120/=', 'Rs. 2,120/='],
+          ['Amanda', 'Dr. Ben', 'Mr. Kevin', 'Lab 04', 'Urine Analysis', '2025-11-07', 'CANCELLED', '-', '-', '-'],
+          ['Charles', 'Dr. Rob', 'Mr. Kevin', 'Lab 03', 'ECG Report (Holter)', '2025-11-08', 'COMPLETED', 'Rs. 6,000/=', 'Rs. 300/=', 'Rs. 6,300/=']
         );
+        // For lab, date column is Result Date at index 5, doctor column index 1
+        const dateIdx = 5, docIdx = 1;
+        const filtered = allRows.filter(r => doctors.includes(r[docIdx]) && withinRange(r[dateIdx], start, end));
+        renderRows(filtered);
+        renderedCount = filtered.length;
 
       } else if (type === 'payments') {
-        rows.push(
-          ['Dr. Lee', 'General', '2025-11-06', 'General consultation', 'Alex', 'Rs. 9,200/=', '33%', 'Rs. 3,036/=', 'Rs. 6,164/=', '2025-11-11', 'PAID'],
-          ['Dr. Rob', 'Cardiology', '2025-11-07', 'ECG Test', 'Charles', 'Rs. 6,500/=', '30%', 'Rs. 1,950/=', 'Rs. 4,550/=', '2025-11-11', 'PENDING'],
-          ['Dr. Lee', 'Pediatrics', '2025-11-07', 'Vaccination', 'Lucy', 'Rs. 2,000/=', '40%', 'Rs. 800/=', 'Rs. 1,200/=', '2025-11-12', 'PENDING'],
-          ['Dr. Ben', 'General', '2025-11-08', 'Minor Procedure', 'Ethan', 'Rs. 4,200/=', '35%', 'Rs. 1,470/=', 'Rs. 2,730/=', '2025-11-12', 'PENDING'],
-          ['Dr. Rob', 'Orthopedics', '2025-11-08', 'X-Ray', 'Clara', 'Rs. 5,200/=', '25%', 'Rs. 1,300/=', 'Rs. 3,900/=', '2025-11-11', 'PAID'],
-          ['Dr. Lee', 'Neurology', '2025-11-08', 'Scan', 'Steve', 'Rs. 23,000/=', '35%', 'Rs. 8,050/=', 'Rs. 14,950/=', '2025-11-12', 'PENDING'],
-          ['Dr. Ben', 'General', '2025-11-07', 'Consultation', 'Amanda', 'Rs. 0/=', '0%', 'Rs. 0/=', 'Rs. 0/=', '-', 'CANCELLED'],
-          ['Dr. Lee', 'General', '2025-11-09', 'Follow-up', 'Diana', 'Rs. 3,500/=', '33%', 'Rs. 1,155/=', 'Rs. 2,345/=', '2025-11-11', 'PAID'],
-          ['Dr. Ben', 'Imaging', '2025-11-10', 'MRI (referral)', 'Fiona', 'Rs. 19,000/=', '40%', 'Rs. 7,600/=', 'Rs. 11,400/=', '2025-11-13', 'PAID'],
-          ['Dr. Rob', 'General', '2025-11-10', 'Consultation', 'George', 'Rs. 2,700/=', '30%', 'Rs. 810/=', 'Rs. 1,890/=', '2025-11-11', 'PAID']
+        allRows.push(
+          ['Dr. Lee', 'General', 'General consultation', 'Alex', 'Rs. 9,200/=', '33%', 'Rs. 3,036/=', 'Rs. 6,164/=', '2025-11-11', 'PAID'],
+          ['Dr. Rob', 'Cardiology', 'ECG Test', 'Charles', 'Rs. 6,500/=', '30%', 'Rs. 1,950/=', 'Rs. 4,550/=', '2025-11-11', 'PENDING'],
+          ['Dr. Lee', 'Pediatrics', 'Vaccination', 'Lucy', 'Rs. 2,000/=', '40%', 'Rs. 800/=', 'Rs. 1,200/=', '2025-11-12', 'PENDING'],
+          ['Dr. Ben', 'General', 'Minor Procedure', 'Ethan', 'Rs. 4,200/=', '35%', 'Rs. 1,470/=', 'Rs. 2,730/=', '2025-11-12', 'PENDING'],
+          ['Dr. Rob', 'Orthopedics', 'X-Ray', 'Clara', 'Rs. 5,200/=', '25%', 'Rs. 1,300/=', 'Rs. 3,900/=', '2025-11-11', 'PAID'],
+          ['Dr. Lee', 'Neurology', 'Scan', 'Steve', 'Rs. 23,000/=', '35%', 'Rs. 8,050/=', 'Rs. 14,950/=', '2025-11-12', 'PENDING'],
+          ['Dr. Ben', 'General', 'Consultation', 'Amanda', 'Rs. 0/=', '0%', 'Rs. 0/=', 'Rs. 0/=', '-', 'CANCELLED'],
+          ['Dr. Lee', 'General', 'Follow-up', 'Diana', 'Rs. 3,500/=', '33%', 'Rs. 1,155/=', 'Rs. 2,345/=', '2025-11-11', 'PAID'],
+          ['Dr. Ben', 'Imaging', 'MRI (referral)', 'Fiona', 'Rs. 19,000/=', '40%', 'Rs. 7,600/=', 'Rs. 11,400/=', '2025-11-13', 'PAID'],
+          ['Dr. Rob', 'General', 'Consultation', 'George', 'Rs. 2,700/=', '30%', 'Rs. 810/=', 'Rs. 1,890/=', '2025-11-11', 'PAID']
         );
+        // For payments, payment date index 8, doctor index 0
+        const dateIdx = 8, docIdx = 0;
+        const filtered = allRows.filter(r => doctors.includes(r[docIdx]) && withinRange(r[dateIdx], start, end));
+        renderRows(filtered);
+        renderedCount = filtered.length;
       }
 
-      rows.forEach(r => {
-        const tr = document.createElement('tr');
-        r.forEach(html => {
-          const td = document.createElement('td');
-          td.innerHTML = html;
-          tr.appendChild(td);
+      function renderRows(rows){
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          r.forEach(html => {
+            const td = document.createElement('td');
+            td.innerHTML = html;
+            tr.appendChild(td);
+          });
+          reportTbody.appendChild(tr);
         });
-        reportTbody.appendChild(tr);
-      });
+      }
+
+      function withinRange(dateStr, startStr, endStr){
+        // Expecting YYYY-MM-DD; inclusive bounds
+        if (!dateStr || !startStr || !endStr) return false;
+        return String(dateStr) >= String(startStr) && String(dateStr) <= String(endStr);
+      }
 
       // meta info
       if (reportMeta){
         reportMeta.classList.remove('hidden');
+        const doctorList = (doctors || []).join(', ');
         reportMeta.innerHTML = `<div>Report Type: <strong>${type.charAt(0).toUpperCase()+type.slice(1)}</strong></div>`;
       }
 
       // show actions
       reportActions && reportActions.classList.remove('hidden');
+      return renderedCount;
     }
 
     function validateReportFilters(){
@@ -317,9 +342,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         showToast(v.message, true);
         return;
       }
-      renderDemoReport(v.type);
+      const count = renderDemoReport(v.type, v.doctors, v.start, v.end) ?? 0;
       if (reportTableWrapper) reportTableWrapper.classList.remove('hidden');
-      showToast('Report generated (3 demo rows)');
+      // showToast(`Report generated (${count} row${count===1?'':'s'})`);
+      showToast(`Report generated successfully`);
     });
 
     // Changing report type hides existing table until regenerated
@@ -640,7 +666,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function showToast(message, isError=false, duration=2800) {
     toastEl.textContent = message;
-    toastEl.style.background = isError ? 'var(--danger)' : '#111';
+    // toastEl.style.background = isError ? 'var(--danger)' : '#111';
+    toastEl.style.background = '#111';
     toastEl.classList.add('show');
     clearTimeout(toastEl._timer);
     toastEl._timer = setTimeout(() => {

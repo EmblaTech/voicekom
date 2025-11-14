@@ -232,6 +232,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       return REPORT_COLUMNS[v] ? v : '';
     }
 
+
+
     function renderDemoReport(type, doctors, start, end){
       if (!type) return;
       if (!reportThead || !reportTbody) return;
@@ -274,36 +276,111 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let renderedCount = 0;
   if (type === 'patients') {
+        // allRows.push(
+        //   ['Alex', '94767789188', '23', 'Male', '9:00am', '2025-11-06', 'Dr. Lee', 'Room 01', 'COMPLETED', 'Rs. 2,000/=', 'PAID'],
+        //   ['Charles', '94789134261', '47', 'Male', '12:10pm', '2025-11-07', 'Dr. Rob', 'Room 03', 'COMPLETED', 'Rs. 2,300/=', 'PENDING'],
+        //   ['Lucy', '9471568221', '5', 'Female', '3:00pm', '2025-11-07', 'Dr. Lee', 'Room 01', 'COMPLETED', 'Rs. 2,000/=', 'PENDING'],
+        //   ['Amanda', '94715558769', '31', 'Female', '3:45pm', '2025-11-07', 'Dr. Ben', 'Room 03', 'CANCELLED', '-', '-'],
+        //   ['Ben', '0771234567', '31', 'Male', '10:30am', '2025-11-08', 'Dr. Rob', 'Room 02', 'PENDING', 'Rs. 1,500/=', 'PENDING'],
+        //   ['Clara', '0719992211', '28', 'Female', '2:00pm', '2025-11-08', 'Dr. Rob', 'Room 03', 'CANCELLED', '-', '-'],
+        //   ['Diana', '94770011223', '39', 'Female', '11:15am', '2025-11-09', 'Dr. Lee', 'Room 02', 'COMPLETED', 'Rs. 3,500/=', 'PAID'],
+        //   ['Ethan', '94770033445', '52', 'Male', '8:30am', '2025-11-09', 'Dr. Ben', 'Room 01', 'PENDING', 'Rs. 4,200/=', 'PENDING'],
+        //   ['Fiona', '94770055667', '29', 'Female', '4:00pm', '2025-11-10', 'Dr. Lee', 'Room 04', 'COMPLETED', 'Rs. 1,800/=', 'PAID'],
+        //   ['George', '94770077889', '45', 'Male', '9:45am', '2025-11-10', 'Dr. Rob', 'Room 02', 'COMPLETED', 'Rs. 2,700/=', 'PAID']
+        // );
+
         allRows.push(
-          ['Alex', '94767789188', '23', 'Male', '9:00am', '2025-11-06', 'Dr. Lee', 'Room 01', 'COMPLETED', 'Rs. 2,000/=', 'PAID'],
-          ['Charles', '94789134261', '47', 'Male', '12:10pm', '2025-11-07', 'Dr. Rob', 'Room 03', 'COMPLETED', 'Rs. 2,300/=', 'PENDING'],
-          ['Lucy', '9471568221', '5', 'Female', '3:00pm', '2025-11-07', 'Dr. Lee', 'Room 01', 'COMPLETED', 'Rs. 2,000/=', 'PENDING'],
-          ['Amanda', '94715558769', '31', 'Female', '3:45pm', '2025-11-07', 'Dr. Ben', 'Room 03', 'CANCELLED', '-', '-'],
-          ['Ben', '0771234567', '31', 'Male', '10:30am', '2025-11-08', 'Dr. Rob', 'Room 02', 'PENDING', 'Rs. 1,500/=', 'PENDING'],
-          ['Clara', '0719992211', '28', 'Female', '2:00pm', '2025-11-08', 'Dr. Rob', 'Room 03', 'CANCELLED', '-', '-'],
-          ['Diana', '94770011223', '39', 'Female', '11:15am', '2025-11-09', 'Dr. Lee', 'Room 02', 'COMPLETED', 'Rs. 3,500/=', 'PAID'],
-          ['Ethan', '94770033445', '52', 'Male', '8:30am', '2025-11-09', 'Dr. Ben', 'Room 01', 'PENDING', 'Rs. 4,200/=', 'PENDING'],
-          ['Fiona', '94770055667', '29', 'Female', '4:00pm', '2025-11-10', 'Dr. Lee', 'Room 04', 'COMPLETED', 'Rs. 1,800/=', 'PAID'],
-          ['George', '94770077889', '45', 'Male', '9:45am', '2025-11-10', 'Dr. Rob', 'Room 02', 'COMPLETED', 'Rs. 2,700/=', 'PAID']
-        );
+      ['Alex','94767789188','23','Male','9:00am','2025-11-06','Dr. Lee','Room 01','COMPLETED','Rs. 2,000/=','PAID'],
+      ['Charles','94789134261','47','Male','12:00pm','2025-11-07','Dr. Rob','Room 03','COMPLETED','Rs. 2,300/=','PENDING'],
+      ['Lucy','9471568221','5','Female','3:00pm','2025-11-07','Dr. Lee','Room 01','COMPLETED','Rs. 2,000/=','PENDING'],
+      ['Amanda','94715558769','31','Female','3:45pm','2025-11-07','Dr. Ben','Room 03','CANCELLED','-','-'],
+      ['Ben','0771234567','31','Male','10:30am','2025-11-08','Dr. Rob','Room 02','PENDING','Rs. 1,500/=','PENDING'],
+      ['Clara','0719992211','28','Female','14:00','2025-11-08','Dr. Rob','Room 03','CANCELLED','Rs. 0/=','N/A'],
+      ['Diana','94770011223','39','Female','11:15am','2025-11-09','Dr. Lee','Room 02','COMPLETED','Rs. 3,500/=','PAID'],
+      ['Ethan','94770033445','52','Male','08:30am','2025-11-09','Dr. Ben','Room 01','PENDING','Rs. 4,200/=','PENDING'],
+      ['Fiona','94770055667','29','Female','16:00','2025-11-10','Dr. Lee','Room 04','COMPLETED','Rs. 1,800/=','PAID'],
+      ['George','94770077889','45','Male','09:45am','2025-11-10','Dr. Rob','Room 02','COMPLETED','Rs. 2,700/=','PAID'],
+      ['Hannah','94770088990','34','Female','10:15am','2025-11-11','Dr. Ben','Room 01','PENDING','Rs. 2,400/=','PENDING'],
+      ['Ian','94770100112','60','Male','13:00pm','2025-11-11','Dr. Lee','Room 02','COMPLETED','Rs. 5,000/=','PAID'],
+      ['Jade','94770122334','26','Female','14:30','2025-11-12','Dr. Rob','Room 03','PENDING','Rs. 1,200/=','PENDING'],
+      ['Kyle','94770144556','38','Male','15:00','2025-11-12','Dr. Ben','Room 04','COMPLETED','Rs. 2,800/=','PAID'],
+      ['Lina','94770166778','22','Female','09:00am','2025-11-13','Dr. Lee','Room 01','COMPLETED','Rs. 1,500/=','PAID'],
+      ['Mike','94770188990','50','Male','11:45am','2025-11-13','Dr. Rob','Room 02','PENDING','Rs. 3,300/=','PENDING'],
+      ['Nora','94770200123','42','Female','10:30am','2025-11-14','Dr. Lee','Room 03','COMPLETED','Rs. 2,200/=','PAID'],
+      ['Oscar','94770222345','29','Male','12:00pm','2025-11-14','Dr. Ben','Room 01','PENDING','Rs. 3,800/=','PENDING'],
+      ['Paula','94770244567','36','Female','13:30pm','2025-11-15','Dr. Rob','Room 04','COMPLETED','Rs. 2,500/=','PAID'],
+      ['Quinn','94770266789','18','Male','16:15','2025-11-15','Dr. Lee','Room 02','PENDING','Rs. 900/=','PENDING'],
+      ['Rita','94770288990','55','Female','08:45am','2025-11-16','Dr. Ben','Room 03','COMPLETED','Rs. 6,200/=','PAID'],
+      ['Sam','94770300112','33','Male','09:30am','2025-11-16','Dr. Rob','Room 01','PENDING','Rs. 1,700/=','PENDING'],
+      ['Tina','94770322334','27','Female','10:00am','2025-11-17','Dr. Lee','Room 04','COMPLETED','Rs. 1,100/=','PAID'],
+      ['Uma','94770344556','48','Female','11:00am','2025-11-17','Dr. Ben','Room 02','COMPLETED','Rs. 4,900/=','PAID'],
+      ['Victor','94770366778','61','Male','14:45','2025-11-18','Dr. Rob','Room 03','PENDING','Rs. 3,600/=','PENDING'],
+      ['Wendy','94770388990','30','Female','15:30','2025-11-18','Dr. Lee','Room 01','COMPLETED','Rs. 2,100/=','PAID'],
+      ['Xavier','94770400123','44','Male','09:15am','2025-11-19','Dr. Ben','Room 04','PENDING','Rs. 5,000/=','PENDING'],
+      ['Yara','94770422345','21','Female','10:45','2025-11-19','Dr. Rob','Room 02','COMPLETED','Rs. 1,600/=','PAID'],
+      ['Zack','94770444567','37','Male','12:30pm','2025-11-20','Dr. Lee','Room 03','PENDING','Rs. 2,900/=','PENDING'],
+      ['Aaron','94770466789','49','Male','13:30pm','2025-11-20','Dr. Ben','Room 01','COMPLETED','Rs. 3,300/=','PAID'],
+      ['Bella','94770488990','32','Female','16:00','2025-11-21','Dr. Rob','Room 04','CANCELLED','-','-']
+    );
+
+
+
         const dateIdx = 5, docIdx = 6;
         const filtered = allRows.filter(r => doctors.includes(r[docIdx]) && withinRange(r[dateIdx], start, end));
   renderRows(filtered);
         renderedCount = filtered.length;
 
       } else if (type === 'lab') {
+        // allRows.push(
+        //   ['Alex', 'Dr. Lee', 'Mr. Peter', 'Lab 04', 'NS1 Antigen, Antibodies', '2025-11-10', 'COMPLETED', 'Rs. 7,000/=', 'Rs. 200/=', 'Rs. 7,200/='],
+        //   ['Lucy', 'Dr. Lee', 'Mrs. Spencer', 'Lab 04', 'PCR, Rapid Antibodies', '2025-11-11', 'COMPLETED', 'Rs. 7,300/=', 'Rs. 200/=', 'Rs. 7,500/='],
+        //   ['Ethan', 'Dr. Ben', 'Mr. Peter', 'Lab 02', 'Liver Panel', '2025-11-09', 'PENDING', 'Rs. 4,800/=', 'Rs. 250/=', 'Rs. 5,050/='],
+        //   ['Ben', 'Dr. Rob', 'Mrs. Spencer', 'Lab 02', 'Full Blood Count', '2025-11-09', 'PENDING', 'Rs. 3,500/=', 'Rs. 150/=', 'Rs. 3,650/='],
+        //   ['Diana', 'Dr. Lee', 'Mr. Kevin', 'Lab 03', 'Thyroid Profile', '2025-11-10', 'COMPLETED', 'Rs. 2,900/=', 'Rs. 150/=', 'Rs. 3,050/='],
+        //   ['Fiona', 'Dr. Lee', 'Mrs. Spencer', 'Lab 04', 'Rapid Antibodies', '2025-11-10', 'COMPLETED', 'Rs. 1,200/=', 'Rs. 100/=', 'Rs. 1,300/='],
+        //   ['George', 'Dr. Rob', 'Mr. Peter', 'Lab 01', 'Lipid Profile', '2025-11-08', 'COMPLETED', 'Rs. 4,200/=', 'Rs. 180/=', 'Rs. 4,380/='],
+        //   ['Clara', 'Dr. Rob', 'Mr. Peter', 'Lab 01', 'X-Ray (Chest)', '2025-11-08', 'COMPLETED', 'Rs. 2,000/=', 'Rs. 120/=', 'Rs. 2,120/='],
+        //   ['Amanda', 'Dr. Ben', 'Mr. Kevin', 'Lab 04', 'Urine Analysis', '2025-11-07', 'CANCELLED', '-', '-', '-'],
+        //   ['Charles', 'Dr. Rob', 'Mr. Kevin', 'Lab 03', 'ECG Report (Holter)', '2025-11-08', 'COMPLETED', 'Rs. 6,000/=', 'Rs. 300/=', 'Rs. 6,300/=']
+        // );
+
         allRows.push(
-          ['Alex', 'Dr. Lee', 'Mr. Peter', 'Lab 04', 'NS1 Antigen, Antibodies', '2025-11-10', 'COMPLETED', 'Rs. 7,000/=', 'Rs. 200/=', 'Rs. 7,200/='],
-          ['Lucy', 'Dr. Lee', 'Mrs. Spencer', 'Lab 04', 'PCR, Rapid Antibodies', '2025-11-11', 'COMPLETED', 'Rs. 7,300/=', 'Rs. 200/=', 'Rs. 7,500/='],
-          ['Ethan', 'Dr. Ben', 'Mr. Peter', 'Lab 02', 'Liver Panel', '2025-11-09', 'PENDING', 'Rs. 4,800/=', 'Rs. 250/=', 'Rs. 5,050/='],
-          ['Ben', 'Dr. Rob', 'Mrs. Spencer', 'Lab 02', 'Full Blood Count', '2025-11-09', 'PENDING', 'Rs. 3,500/=', 'Rs. 150/=', 'Rs. 3,650/='],
-          ['Diana', 'Dr. Lee', 'Mr. Kevin', 'Lab 03', 'Thyroid Profile', '2025-11-10', 'COMPLETED', 'Rs. 2,900/=', 'Rs. 150/=', 'Rs. 3,050/='],
-          ['Fiona', 'Dr. Lee', 'Mrs. Spencer', 'Lab 04', 'Rapid Antibodies', '2025-11-10', 'COMPLETED', 'Rs. 1,200/=', 'Rs. 100/=', 'Rs. 1,300/='],
-          ['George', 'Dr. Rob', 'Mr. Peter', 'Lab 01', 'Lipid Profile', '2025-11-08', 'COMPLETED', 'Rs. 4,200/=', 'Rs. 180/=', 'Rs. 4,380/='],
-          ['Clara', 'Dr. Rob', 'Mr. Peter', 'Lab 01', 'X-Ray (Chest)', '2025-11-08', 'COMPLETED', 'Rs. 2,000/=', 'Rs. 120/=', 'Rs. 2,120/='],
-          ['Amanda', 'Dr. Ben', 'Mr. Kevin', 'Lab 04', 'Urine Analysis', '2025-11-07', 'CANCELLED', '-', '-', '-'],
-          ['Charles', 'Dr. Rob', 'Mr. Kevin', 'Lab 03', 'ECG Report (Holter)', '2025-11-08', 'COMPLETED', 'Rs. 6,000/=', 'Rs. 300/=', 'Rs. 6,300/=']
-        );
+      ['Alex','Dr. Lee','Dr. Ben','Lab 04','NS1 Antigen, Antibodies','2025-11-06','2025-11-10','COMPLETED','Rs. 7,000/=','Rs. 200/=','Rs. 7,200/='],
+      ['Lucy','Dr. Lee','Dr. Spencer','Lab 04','PCR, Rapid Antibodies','2025-11-07','2025-11-11','COMPLETED','Rs. 7,300/=','Rs. 200/=','Rs. 7,500/='],
+      ['Ethan','Dr. Ben','Dr. Ben','Lab 02','Liver Panel','2025-11-08','2025-11-09','PENDING','Rs. 4,800/=','Rs. 250/=','Rs. 5,050/='],
+      ['Ben','Dr. Rob','Dr. Ben','Lab 02','Full Blood Count','2025-11-07','2025-11-09','PENDING','Rs. 3,500/=','Rs. 150/=','Rs. 3,650/='],
+      ['Diana','Dr. Lee','Mr. Kevin','Lab 03','Thyroid Profile','2025-11-09','2025-11-10','COMPLETED','Rs. 2,900/=','Rs. 150/=','Rs. 3,050/='],
+      ['Fiona','Dr. Lee','Mrs. Spencer','Lab 04','Rapid Antibodies','2025-11-10','2025-11-10','COMPLETED','Rs. 1,200/=','Rs. 100/=','Rs. 1,300/='],
+      ['George','Dr. Rob','Mr. Peter','Lab 01','Lipid Profile','2025-11-08','2025-11-08','COMPLETED','Rs. 4,200/=','Rs. 180/=','Rs. 4,380/='],
+      ['Clara','Dr. Rob','Mr. Peter','Lab 01','X-Ray (Chest)','2025-11-08','2025-11-08','COMPLETED','Rs. 2,000/=','Rs. 120/=','Rs. 2,120/='],
+      ['Amanda','Dr. Ben','Mr. Kevin','Lab 04','Urine Analysis','2025-11-07','2025-11-07','CANCELLED','-','-','-'],
+      ['Charles','Dr. Rob','Dr. Ben','Lab 03','ECG Report (Holter)','2025-11-07','2025-11-08','COMPLETED','Rs. 6,000/=','Rs. 300/=','Rs. 6,300/='],
+      ['Hannah','Dr. Ben','Mr. Kevin','Lab 02','Blood Sugar','2025-11-11','2025-11-11','PENDING','Rs. 900/=','Rs. 50/=','Rs. 950/='],
+      ['Ian','Dr. Lee','Mr. Kevin','Lab 03','Kidney Panel','2025-11-11','2025-11-12','COMPLETED','Rs. 5,200/=','Rs. 200/=','Rs. 5,400/='],
+      ['Jade','Dr. Rob','Dr. Ben','Lab 01','Allergy Panel','2025-11-12','2025-11-13','PENDING','Rs. 2,600/=','Rs. 120/=','Rs. 2,720/='],
+      ['Kyle','Dr. Ben','Dr. Ben','Lab 02','Stool Analysis','2025-11-12','2025-11-12','COMPLETED','Rs. 1,400/=','Rs. 80/=','Rs. 1,480/='],
+      ['Lina','Dr. Lee','Mrs. Spencer','Lab 04','Pregnancy Test','2025-11-13','2025-11-13','COMPLETED','Rs. 800/=','Rs. 50/=','Rs. 850/='],
+      ['Mike','Dr. Rob','Mr. Peter','Lab 01','Chest X-Ray','2025-11-13','2025-11-13','PENDING','Rs. 2,100/=','Rs. 120/=','Rs. 2,220/='],
+      ['Nora','Dr. Lee','Mr. Kevin','Lab 03','ECG','2025-11-14','2025-11-14','COMPLETED','Rs. 1,900/=','Rs. 100/=','Rs. 2,000/='],
+      ['Oscar','Dr. Ben','Dr. Ben','Lab 02','Ultrasound','2025-11-14','2025-11-15','PENDING','Rs. 3,500/=','Rs. 200/=','Rs. 3,700/='],
+      ['Paula','Dr. Rob','Mrs. Spencer','Lab 03','Bone Density','2025-11-15','2025-11-16','COMPLETED','Rs. 4,000/=','Rs. 200/=','Rs. 4,200/='],
+      ['Quinn','Dr. Lee','Dr. Ben','Lab 01','HBA1C','2025-11-15','2025-11-15','PENDING','Rs. 1,100/=','Rs. 60/=','Rs. 1,160/='],
+      ['Rita','Dr. Ben','Mr. Kevin','Lab 02','Full Metabolic Panel','2025-11-16','2025-11-17','COMPLETED','Rs. 6,500/=','Rs. 300/=','Rs. 6,800/='],
+      ['Sam','Dr. Rob','Dr. Ben','Lab 04','Drug Screen','2025-11-16','2025-11-16','PENDING','Rs. 1,000/=','Rs. 50/=','Rs. 1,050/='],
+      ['Tina','Dr. Lee','Mrs. Spencer','Lab 03','Viral Panel','2025-11-17','2025-11-18','COMPLETED','Rs. 3,200/=','Rs. 150/=','Rs. 3,350/='],
+      ['Uma','Dr. Ben','Mr. Kevin','Lab 02','Cardiac Enzymes','2025-11-17','2025-11-18','COMPLETED','Rs. 4,400/=','Rs. 200/=','Rs. 4,600/='],
+      ['Victor','Dr. Rob','Dr. Ben','Lab 01','MRI (referral)','2025-11-18','2025-11-19','PENDING','Rs. 19,000/=','Rs. 1,000/=','Rs. 20,000/='],
+      ['Wendy','Dr. Lee','Mrs. Spencer','Lab 04','Rapid Antibodies','2025-11-18','2025-11-18','COMPLETED','Rs. 1,200/=','Rs. 100/=','Rs. 1,300/='],
+      ['Xavier','Dr. Ben','Dr. Ben','Lab 02','CT Scan','2025-11-19','2025-11-20','PENDING','Rs. 12,000/=','Rs. 600/=','Rs. 12,600/='],
+      ['Yara','Dr. Rob','Mr. Peter','Lab 01','Lipid Profile','2025-11-19','2025-11-19','COMPLETED','Rs. 4,200/=','Rs. 180/=','Rs. 4,380/='],
+      ['Zack','Dr. Lee','Mr. Kevin','Lab 03','Allergy IgE','2025-11-20','2025-11-21','PENDING','Rs. 2,300/=','Rs. 100/=','Rs. 2,400/='],
+      ['Aaron','Dr. Ben','Dr. Ben','Lab 04','Hormone Panel','2025-11-20','2025-11-22','COMPLETED','Rs. 5,700/=','Rs. 250/=','Rs. 5,950/='],
+      ['Bella','Dr. Rob','Mrs. Spencer','Lab 02','Cancelled Sample','2025-11-21','2025-11-21','CANCELLED','-','-','-']
+    );
+
+
+
+
         // For lab, date column is Result Date at index 5, doctor column index 1
         const dateIdx = 5, docIdx = 1;
         const filtered = allRows.filter(r => doctors.includes(r[docIdx]) && withinRange(r[dateIdx], start, end));
@@ -311,18 +388,56 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderedCount = filtered.length;
 
       } else if (type === 'payments') {
+        // allRows.push(
+        //   ['Dr. Lee', 'General', 'General consultation', 'Alex', 'Rs. 9,200/=', '33%', 'Rs. 3,036/=', 'Rs. 6,164/=', '2025-11-11', 'PAID'],
+        //   ['Dr. Rob', 'Cardiology', 'ECG Test', 'Charles', 'Rs. 6,500/=', '30%', 'Rs. 1,950/=', 'Rs. 4,550/=', '2025-11-11', 'PENDING'],
+        //   ['Dr. Lee', 'Pediatrics', 'Vaccination', 'Lucy', 'Rs. 2,000/=', '40%', 'Rs. 800/=', 'Rs. 1,200/=', '2025-11-12', 'PENDING'],
+        //   ['Dr. Ben', 'General', 'Minor Procedure', 'Ethan', 'Rs. 4,200/=', '35%', 'Rs. 1,470/=', 'Rs. 2,730/=', '2025-11-12', 'PENDING'],
+        //   ['Dr. Rob', 'Orthopedics', 'X-Ray', 'Clara', 'Rs. 5,200/=', '25%', 'Rs. 1,300/=', 'Rs. 3,900/=', '2025-11-11', 'PAID'],
+        //   ['Dr. Lee', 'Neurology', 'Scan', 'Steve', 'Rs. 23,000/=', '35%', 'Rs. 8,050/=', 'Rs. 14,950/=', '2025-11-12', 'PENDING'],
+        //   ['Dr. Ben', 'General', 'Consultation', 'Amanda', 'Rs. 0/=', '0%', 'Rs. 0/=', 'Rs. 0/=', '-', 'CANCELLED'],
+        //   ['Dr. Lee', 'General', 'Follow-up', 'Diana', 'Rs. 3,500/=', '33%', 'Rs. 1,155/=', 'Rs. 2,345/=', '2025-11-11', 'PAID'],
+        //   ['Dr. Ben', 'Imaging', 'MRI (referral)', 'Fiona', 'Rs. 19,000/=', '40%', 'Rs. 7,600/=', 'Rs. 11,400/=', '2025-11-13', 'PAID'],
+        //   ['Dr. Rob', 'General', 'Consultation', 'George', 'Rs. 2,700/=', '30%', 'Rs. 810/=', 'Rs. 1,890/=', '2025-11-11', 'PAID']
+        // );
+
         allRows.push(
-          ['Dr. Lee', 'General', 'General consultation', 'Alex', 'Rs. 9,200/=', '33%', 'Rs. 3,036/=', 'Rs. 6,164/=', '2025-11-11', 'PAID'],
-          ['Dr. Rob', 'Cardiology', 'ECG Test', 'Charles', 'Rs. 6,500/=', '30%', 'Rs. 1,950/=', 'Rs. 4,550/=', '2025-11-11', 'PENDING'],
-          ['Dr. Lee', 'Pediatrics', 'Vaccination', 'Lucy', 'Rs. 2,000/=', '40%', 'Rs. 800/=', 'Rs. 1,200/=', '2025-11-12', 'PENDING'],
-          ['Dr. Ben', 'General', 'Minor Procedure', 'Ethan', 'Rs. 4,200/=', '35%', 'Rs. 1,470/=', 'Rs. 2,730/=', '2025-11-12', 'PENDING'],
-          ['Dr. Rob', 'Orthopedics', 'X-Ray', 'Clara', 'Rs. 5,200/=', '25%', 'Rs. 1,300/=', 'Rs. 3,900/=', '2025-11-11', 'PAID'],
-          ['Dr. Lee', 'Neurology', 'Scan', 'Steve', 'Rs. 23,000/=', '35%', 'Rs. 8,050/=', 'Rs. 14,950/=', '2025-11-12', 'PENDING'],
-          ['Dr. Ben', 'General', 'Consultation', 'Amanda', 'Rs. 0/=', '0%', 'Rs. 0/=', 'Rs. 0/=', '-', 'CANCELLED'],
-          ['Dr. Lee', 'General', 'Follow-up', 'Diana', 'Rs. 3,500/=', '33%', 'Rs. 1,155/=', 'Rs. 2,345/=', '2025-11-11', 'PAID'],
-          ['Dr. Ben', 'Imaging', 'MRI (referral)', 'Fiona', 'Rs. 19,000/=', '40%', 'Rs. 7,600/=', 'Rs. 11,400/=', '2025-11-13', 'PAID'],
-          ['Dr. Rob', 'General', 'Consultation', 'George', 'Rs. 2,700/=', '30%', 'Rs. 810/=', 'Rs. 1,890/=', '2025-11-11', 'PAID']
-        );
+      ['Dr. Lee','General','2025-11-06','General consultation','Alex','Rs. 9,200/=','33%','Rs. 3,036/=','Rs. 6,164/=','2025-11-11','PAID'],
+      ['Dr. Rob','Cardiology','2025-11-07','ECG Test','Charles','Rs. 6,500/=','30%','Rs. 1,950/=','Rs. 4,550/=','2025-11-11','PENDING'],
+      ['Dr. Lee','Pediatrics','2025-11-07','Vaccination','Lucy','Rs. 2,000/=','40%','Rs. 800/=','Rs. 1,200/=','2025-11-12','PENDING'],
+      ['Dr. Ben','General','2025-11-08','Minor Procedure','Ethan','Rs. 4,200/=','35%','Rs. 1,470/=','Rs. 2,730/=','2025-11-12','PENDING'],
+      ['Dr. Rob','Orthopedics','2025-11-08','X-Ray','Clara','Rs. 5,200/=','25%','Rs. 1,300/=','Rs. 3,900/=','2025-11-11','PAID'],
+      ['Dr. Lee','Neurology','2025-11-08','Scan','Steve','Rs. 23,000/=','35%','Rs. 8,050/=','Rs. 14,950/=','2025-11-12','PENDING'],
+      ['Dr. Ben','General','2025-11-07','Consultation','Amanda','Rs. 0/=','0%','Rs. 0/=','Rs. 0/=', '-','CANCELLED'],
+      ['Dr. Lee','General','2025-11-09','Follow-up','Diana','Rs. 3,500/=','33%','Rs. 1,155/=','Rs. 2,345/=','2025-11-11','PAID'],
+      ['Dr. Ben','Imaging','2025-11-10','MRI (referral)','Fiona','Rs. 19,000/=','40%','Rs. 7,600/=','Rs. 11,400/=','2025-11-13','PAID'],
+      ['Dr. Rob','General','2025-11-10','Consultation','George','Rs. 2,700/=','30%','Rs. 810/=','Rs. 1,890/=','2025-11-11','PAID'],
+      ['Dr. Ben','General','2025-11-11','Checkup','Hannah','Rs. 2,400/=','33%','Rs. 792/=','Rs. 1,608/=','2025-11-14','PENDING'],
+      ['Dr. Lee','Cardiology','2025-11-11','Angio Follow-up','Ian','Rs. 5,000/=','30%','Rs. 1,500/=','Rs. 3,500/=','2025-11-13','PAID'],
+      ['Dr. Rob','ENT','2025-11-12','Ear Cleaning','Jade','Rs. 1,200/=','30%','Rs. 360/=','Rs. 840/=','2025-11-14','PENDING'],
+      ['Dr. Ben','General','2025-11-12','Minor Procedure','Kyle','Rs. 2,800/=','35%','Rs. 980/=','Rs. 1,820/=','2025-11-14','PAID'],
+      ['Dr. Lee','Gynae','2025-11-13','Antenatal Visit','Lina','Rs. 1,500/=','30%','Rs. 450/=','Rs. 1,050/=','2025-11-15','PAID'],
+      ['Dr. Rob','Orthopedics','2025-11-13','Fracture Review','Mike','Rs. 3,300/=','30%','Rs. 990/=','Rs. 2,310/=','2025-11-15','PENDING'],
+      ['Dr. Lee','Cardiology','2025-11-14','ECG','Nora','Rs. 2,200/=','30%','Rs. 660/=','Rs. 1,540/=','2025-11-16','PAID'],
+      ['Dr. Ben','Imaging','2025-11-14','Ultrasound','Oscar','Rs. 3,800/=','35%','Rs. 1,330/=','Rs. 2,470/=','2025-11-16','PENDING'],
+      ['Dr. Rob','General','2025-11-15','Bone Density','Paula','Rs. 4,000/=','30%','Rs. 1,200/=','Rs. 2,800/=','2025-11-17','PAID'],
+      ['Dr. Lee','General','2025-11-15','Walk-in','Quinn','Rs. 900/=','25%','Rs. 225/=','Rs. 675/=','2025-11-17','PENDING'],
+      ['Dr. Ben','General','2025-11-16','Wellness','Rita','Rs. 6,200/=','35%','Rs. 2,170/=','Rs. 4,030/=','2025-11-18','PAID'],
+      ['Dr. Rob','Lab Referral','2025-11-16','Drug Screen','Sam','Rs. 1,700/=','30%','Rs. 510/=','Rs. 1,190/=','2025-11-18','PENDING'],
+      ['Dr. Lee','Infectious','2025-11-17','Viral Consult','Tina','Rs. 1,100/=','30%','Rs. 330/=','Rs. 770/=','2025-11-19','PAID'],
+      ['Dr. Ben','Cardiac','2025-11-17','Cardiac Panel','Uma','Rs. 4,900/=','35%','Rs. 1,715/=','Rs. 3,185/=','2025-11-19','PAID'],
+      ['Dr. Rob','Imaging','2025-11-18','MRI Review','Victor','Rs. 3,600/=','30%','Rs. 1,080/=','Rs. 2,520/=','2025-11-20','PENDING'],
+      ['Dr. Lee','General','2025-11-18','Rapid Test','Wendy','Rs. 2,100/=','33%','Rs. 693/=','Rs. 1,407/=','2025-11-19','PAID'],
+      ['Dr. Ben','Imaging','2025-11-19','CT Scan','Xavier','Rs. 12,000/=','35%','Rs. 4,200/=','Rs. 7,800/=','2025-11-21','PENDING'],
+      ['Dr. Rob','Cardiology','2025-11-19','Lipid Counselling','Yara','Rs. 1,600/=','30%','Rs. 480/=','Rs. 1,120/=','2025-11-20','PAID'],
+      ['Dr. Lee','ENT','2025-11-20','Allergy Visit','Zack','Rs. 2,900/=','30%','Rs. 870/=','Rs. 2,030/=','2025-11-21','PENDING'],
+      ['Dr. Ben','Endocrine','2025-11-20','Hormone Consult','Aaron','Rs. 3,300/=','35%','Rs. 1,155/=','Rs. 2,145/=','2025-11-22','PAID'],
+      ['Dr. Rob','General','2025-11-21','Cancelled Visit','Bella','Rs. 0/=','0%','Rs. 0/=','Rs. 0/=', '-','CANCELLED']
+    );
+
+
+
+
         // For payments, payment date index 8, doctor index 0
         const dateIdx = 8, docIdx = 0;
         const filtered = allRows.filter(r => doctors.includes(r[docIdx]) && withinRange(r[dateIdx], start, end));

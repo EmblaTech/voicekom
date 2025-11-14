@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
         const dateIdx = 5, docIdx = 6;
         const filtered = allRows.filter(r => doctors.includes(r[docIdx]) && withinRange(r[dateIdx], start, end));
-        renderRows(filtered);
+  renderRows(filtered);
         renderedCount = filtered.length;
 
       } else if (type === 'lab') {
@@ -270,7 +270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // For lab, date column is Result Date at index 5, doctor column index 1
         const dateIdx = 5, docIdx = 1;
         const filtered = allRows.filter(r => doctors.includes(r[docIdx]) && withinRange(r[dateIdx], start, end));
-        renderRows(filtered);
+  renderRows(filtered);
         renderedCount = filtered.length;
 
       } else if (type === 'payments') {
@@ -291,6 +291,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filtered = allRows.filter(r => doctors.includes(r[docIdx]) && withinRange(r[dateIdx], start, end));
         renderRows(filtered);
         renderedCount = filtered.length;
+      }
+
+      // If no rows, show an empty-state row
+      if (renderedCount === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = cols.length;
+        td.style.textAlign = 'center';
+        td.style.color = 'var(--muted)';
+        td.style.padding = '18px 10px';
+        td.textContent = 'No reports found';
+        tr.appendChild(td);
+        reportTbody.appendChild(tr);
       }
 
       function renderRows(rows){
@@ -318,8 +331,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         reportMeta.innerHTML = `<div>Report Type: <strong>${type.charAt(0).toUpperCase()+type.slice(1)}</strong></div>`;
       }
 
-      // show actions
-      reportActions && reportActions.classList.remove('hidden');
+      // show actions and toggle download availability
+      if (reportActions) reportActions.classList.remove('hidden');
+      if (downloadReportBtn) {
+        downloadReportBtn.disabled = renderedCount === 0;
+        downloadReportBtn.title = renderedCount === 0 ? 'No data to download' : '';
+        downloadReportBtn.setAttribute('aria-disabled', String(renderedCount === 0));
+      }
       return renderedCount;
     }
 
@@ -377,8 +395,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         showToast('PDF libraries not loaded', true);
         return;
       }
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const { jsPDF } = window.jspdf;
+  // Force landscape orientation explicitly ('l' is accepted across jsPDF versions)
+  const doc = new jsPDF({ orientation: 'l', unit: 'pt', format: 'a4' });
 
       // Title
       const type = getSelectedReportType();

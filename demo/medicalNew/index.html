@@ -298,32 +298,22 @@
         <div class="pagination">
           <div class="left">
             <label style="font-weight:600;color:var(--muted)">Items per page:</label>
-            <select id="itemsPerPage" class="select">
-              <option>10</option>
-              <option selected>25</option>
-              <option>50</option>
-              <option>100</option>
+            <select id="itemsPerPage" class="select" aria-label="Items per page">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
             </select>
-            <div style="color:var(--muted)">1–25 of 500 items</div>
+            <div id="rangeLabel" style="color:var(--muted)" aria-live="polite">0 of 0 items</div>
           </div>
 
-          <div class="center">
-            <button class="icon-btn" id="prevPage" title="Previous">First</button>
-            <button class="icon-btn" id="prevPage" title="Previous"><span>&laquo;</span></button>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <button class="btn ghost">1</button>
-              <button class="btn ghost">2</button>
-              <button class="btn ghost">3</button>
-              <span style="color:var(--muted)">…</span>
-              <button class="btn ghost">20</button>
-            </div>
-            <button class="icon-btn" id="nextPage" title="Next"><span>&raquo;</span></button>
-            <button class="icon-btn" id="nextPage" title="Next">Last</button>
+          <div class="right" style="justify-content:flex-end;">
+            <button class="icon-btn" id="firstPageBtn" title="First" aria-label="First page">First</button>
+              <div id="pageLabel" style="color:var(--muted)" aria-live="polite">1 of 1</div>
+              <button class="icon-btn" id="prevPageBtn" title="Previous" aria-label="Previous page">&lt;</button>
+              <button class="icon-btn" id="nextPageBtn" title="Next" aria-label="Next page">&gt;</button>
+            <button class="icon-btn" id="lastPageBtn" title="Last" aria-label="Last page">Last</button>
           </div>
-
-          <!-- <div class="right" style="justify-content:flex-end;">
-            <div style="color:var(--muted)">Jump to page</div>
-          </div> -->
         </div>
       </div>
 

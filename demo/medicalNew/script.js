@@ -3,6 +3,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const STORAGE_KEY = 'clinic_appointments_v1';
   let appointments = [];
   let editingRef = null;
+  // pagination state
+  const PAGE_SIZE_KEY = 'clinic_page_size';
+  let currentPage = 1; // 1-based index
+  let pageSize = parseInt(localStorage.getItem(PAGE_SIZE_KEY) || '25', 10);
 
   // ---------- DOM refs ----------
   const tabs = document.querySelectorAll('.tab-btn');
@@ -26,6 +30,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const tbody = document.getElementById('appointmentsTbody');
   const searchInput = document.getElementById('searchInput');
+  // pagination UI refs
+  const itemsPerPageSelect = document.getElementById('itemsPerPage');
+  const rangeLabelEl = document.getElementById('rangeLabel');
+  const pageLabelEl = document.getElementById('pageLabel');
+  const firstPageBtn = document.getElementById('firstPageBtn');
+  const prevPageBtn = document.getElementById('prevPageBtn');
+  const nextPageBtn = document.getElementById('nextPageBtn');
+  const lastPageBtn = document.getElementById('lastPageBtn');
   // delete modal elements
   const deleteModal = document.getElementById('deleteModal');
   const deleteModalMessage = document.getElementById('deleteModalMessage');
@@ -143,21 +155,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     searchInput.addEventListener('input', () => {
+      // reset to first page on new search
+      currentPage = 1;
       renderAppointmentsTable();
     });
 
-    // pagination UI (non-functional placeholders)
-    document.getElementById('itemsPerPage').addEventListener('change', () => {
-      // UI currently non-functional; could persist choice
-      showToast('Items per page changed (UI only)');
+    // pagination controls
+    if (itemsPerPageSelect) {
+      // initialize select to persisted pageSize
+      if ([10,25,50,100].includes(pageSize)) {
+        itemsPerPageSelect.value = String(pageSize);
+      }
+      itemsPerPageSelect.addEventListener('change', () => {
+        const val = parseInt(itemsPerPageSelect.value || '25', 10);
+        pageSize = isNaN(val) ? 25 : val;
+        localStorage.setItem(PAGE_SIZE_KEY, String(pageSize));
+        currentPage = 1;
+        renderAppointmentsTable();
+      });
+    }
+    firstPageBtn && firstPageBtn.addEventListener('click', () => {
+      if (currentPage !== 1) {
+        currentPage = 1;
+        renderAppointmentsTable();
+      }
     });
-
-    document.getElementById('prevPage').addEventListener('click', () => {
-      showToast('Previous page (not implemented)');
+    prevPageBtn && prevPageBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        renderAppointmentsTable();
+      }
     });
-
-    document.getElementById('nextPage').addEventListener('click', () => {
-      showToast('Next page (not implemented)');
+    nextPageBtn && nextPageBtn.addEventListener('click', () => {
+      // increment; render will clamp and UI will disable when at last
+      currentPage += 1;
+      renderAppointmentsTable();
+    });
+    lastPageBtn && lastPageBtn.addEventListener('click', () => {
+      // jump to a high page; render will clamp to last available page
+      currentPage = Number.MAX_SAFE_INTEGER;
+      renderAppointmentsTable();
     });
     // ---------- Reports: setup (table hidden until Generate) ----------
     const reportTypeRadios = document.querySelectorAll('input[name="reportType"]');
@@ -485,16 +522,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         (rawTime && rawTime.includes(q))
       );
     });
+    const totalItems = rows.length;
+    const totalPages = totalItems === 0 ? 1 : Math.ceil(totalItems / Math.max(1, pageSize));
+    // clamp current page
+    currentPage = Math.min(totalPages, Math.max(1, currentPage));
+    const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * pageSize;
+    const endIndex = totalItems === 0 ? 0 : Math.min(startIndex + pageSize, totalItems);
+    const pageRows = totalItems === 0 ? [] : rows.slice(startIndex, endIndex);
 
+    // render table body
     tbody.innerHTML = '';
-    if (rows.length === 0) {
+    if (pageRows.length === 0) {
       const tr = document.createElement('tr');
       tr.innerHTML = `<td colspan="7" style="text-align:center;color:var(--muted);padding:28px 10px">No appointments found</td>`;
       tbody.appendChild(tr);
-      return;
-    }
-
-    rows.forEach(a => {
+    } else {
+      pageRows.forEach(a => {
       const tr = document.createElement('tr');
 
       const dateTime = formatDateTime(a.apptDate, a.apptTime);
@@ -515,7 +558,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         </td>
       `;
       tbody.appendChild(tr);
-    });
+      });
+    }
 
     // attach action listeners
     tbody.querySelectorAll('button[data-action]').forEach(b => {
@@ -534,6 +578,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         showToast('Notification toggled (UI only)');
       });
     });
+
+    // update pagination labels and button states
+    if (rangeLabelEl) {
+      if (totalItems === 0) {
+        rangeLabelEl.textContent = '0 of 0 items';
+      } else {
+        rangeLabelEl.textContent = `${startIndex + 1}–${endIndex} of ${totalItems} items`;
+      }
+    }
+    if (pageLabelEl) {
+      if (totalItems === 0) {
+        pageLabelEl.textContent = '0 of 0';
+      } else {
+        pageLabelEl.textContent = `${currentPage} of ${totalPages}`;
+      }
+    }
+    const atFirst = totalItems === 0 || currentPage <= 1;
+    const atLast = totalItems === 0 || currentPage >= totalPages;
+    if (firstPageBtn) firstPageBtn.disabled = atFirst;
+    if (prevPageBtn) prevPageBtn.disabled = atFirst;
+    if (nextPageBtn) nextPageBtn.disabled = atLast;
+    if (lastPageBtn) lastPageBtn.disabled = atLast;
 
   }
 

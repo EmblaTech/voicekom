@@ -205,7 +205,7 @@
     "doctor": "Dr. Lee",
     "gender": "Female",
     "assistance": [
-      "Sign language"
+      "Allergy", "Wheelchair"
     ],
     "notes": "Interpreter requested"
   },
@@ -256,9 +256,7 @@
     "apptTime": "09:30",
     "doctor": "Dr. Rob",
     "gender": "Male",
-    "assistance": [
-      "Ambulance drop off"
-    ],
+    "assistance": [],
     "notes": "Arriving by ambulance"
   },
   {
@@ -278,7 +276,7 @@
     "apptTime": "08:45",
     "doctor": "Dr. Ben",
     "gender": "Female",
-    "assistance": [],
+    "assistance": ["Allergy", "Wheelchair"],
     "notes": "New patient intake"
   },
   {
@@ -370,7 +368,7 @@
     "apptTime": "10:45",
     "doctor": "Dr. Ben",
     "gender": "Female",
-    "assistance": [],
+    "assistance": ["Allergy"],
     "notes": ""
   },
   {

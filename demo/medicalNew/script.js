@@ -636,7 +636,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         (rawDate && rawDate.includes(q)) ||
         (rawTime && rawTime.includes(q))
       );
-    });
+    }).sort(compareAppointments);
     const totalItems = rows.length;
     const totalPages = totalItems === 0 ? 1 : Math.ceil(totalItems / Math.max(1, pageSize));
     // clamp current page
@@ -716,6 +716,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (nextPageBtn) nextPageBtn.disabled = atLast;
     if (lastPageBtn) lastPageBtn.disabled = atLast;
 
+  }
+
+  // Sort by patient name (A→Z, case-insensitive), then by appointment date (YYYY-MM-DD),
+  // then by time to stabilize, then by ref as a final tiebreaker.
+  function compareAppointments(a, b){
+    const nameA = (a.patientName || '').trim().toLowerCase();
+    const nameB = (b.patientName || '').trim().toLowerCase();
+    const nameCmp = nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+    if (nameCmp !== 0) return nameCmp;
+    const dA = (a.apptDate || '');
+    const dB = (b.apptDate || '');
+    if (dA < dB) return -1;
+    if (dA > dB) return 1;
+    const tA = (a.apptTime || '');
+    const tB = (b.apptTime || '');
+    if (tA < tB) return -1;
+    if (tA > tB) return 1;
+    return String(a.ref || '').localeCompare(String(b.ref || ''));
   }
 
 

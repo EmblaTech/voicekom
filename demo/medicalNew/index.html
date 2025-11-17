@@ -247,12 +247,21 @@
     </div>
 
     <ul class="tabs" role="tablist" aria-label="Main navigation">
-      <li class="active tab-btn" data-tab="appointments">Appointments</li>
-      <li class="tab-btn" data-tab="billing">Billing</li>
-      <li class="tab-btn" data-tab="research">Research</li>
-      <li class="tab-btn" data-tab="reports">Reports</li>
-      <li class="tab-btn" data-tab="help">Help</li>
+      <li class="active tab-btn" data-tab="appointments" voice.name="go to appointments" onclick="openTab('appointments')">Appointments</li>
+      <li class="tab-btn" data-tab="billing" voice.name="go to billing" onclick="openTab('billing')">Billing</li>
+      <li class="tab-btn" data-tab="research" voice.name="go to research" onclick="openTab('research')">Research</li>
+      <li class="tab-btn" data-tab="reports" voice.name="go to reports" onclick="openTab('reports')">Reports</li>
+      <li class="tab-btn" data-tab="help" voice.name="go to help" onclick="openTab('help')">Help</li>
     </ul>
+
+    <!-- <nav>
+        <button class="tab-btn active" voice.name="go to appointments" onclick="openTab('appointments')">Appointmentsz</button>
+        <button class="tab-btn" voice.name="go to billing" onclick="openTab('billing')">Billingz</button>
+        <button class="tab-btn" voice.name="go to research" onclick="openTab('research')">Researchz</button>
+        <button class="tab-btn" voice.name="go to reports" onclick="openTab('reports')">Reportsz</button>
+        <button class="tab-btn" voice.name="go to help" onclick="openTab('help')">Helpz</button>
+    </nav> -->
+
   </header>
 
   <main class="page">
@@ -268,10 +277,10 @@
         <div class="search-container">
           <div class="search-input" title="Search appointments">
             <!-- <svg width="16" height="16" viewBox="0 0 24 24" style="margin-right:8px;opacity:.6"><path fill="currentColor" d="M9.5 3A6.5 6.5 0 1 1 3 9.5 6.507 6.507 0 0 1 9.5 3m0-2A8.5 8.5 0 1 0 18 9.5 8.51 8.51 0 0 0 9.5 1z"/><path fill="currentColor" d="M21.71 20.29l-5.4-5.39"/></svg> -->
-            <input id="searchInput" placeholder="Search..." />
+            <input id="searchInput" placeholder="Search..." voice.name="search" />
           </div>
 
-          <button id="createBtnTop" class="btn primary">Create Appointment</button>
+          <button id="createBtnTop" class="btn primary" voice.name="new appointment">New Appointment</button>
         </div>
       </div>
 
@@ -298,21 +307,21 @@
         <div class="pagination">
           <div class="left">
             <label style="font-weight:600;color:var(--muted)">Items per page:</label>
-            <select id="itemsPerPage" class="select" aria-label="Items per page">
-              <option value="10">10</option>
-              <option value="25" selected>25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
+            <select id="itemsPerPage" class="select" aria-label="Items per page" voice.name="items per page">
+              <option value="10" voice.name="10">10</option>
+              <option value="25" voice.name="25" selected>25</option>
+              <option value="50" voice.name="50">50</option>
+              <option value="100" voice.name="100">100</option>
             </select>
             <div id="rangeLabel" style="color:var(--muted)" aria-live="polite">0 of 0 items</div>
           </div>
 
           <div class="right" style="justify-content:flex-end;">
-            <button class="icon-btn" id="firstPageBtn" title="First" aria-label="First page">First</button>
-            <button class="icon-btn" id="prevPageBtn" title="Previous" aria-label="Previous page">&lt;</button>
+            <button class="icon-btn" id="firstPageBtn" title="First" aria-label="First page" voice.name="first page">First</button>
+            <button class="icon-btn" id="prevPageBtn" title="Previous" aria-label="Previous page" voice.name="previous page">&lt;</button>
             <div id="pageLabel" style="color:var(--muted)" aria-live="polite">1 of 1</div>           
-            <button class="icon-btn" id="nextPageBtn" title="Next" aria-label="Next page">&gt;</button>
-            <button class="icon-btn" id="lastPageBtn" title="Last" aria-label="Last page">Last</button>
+            <button class="icon-btn" id="nextPageBtn" title="Next" aria-label="Next page" voice.name="next page">&gt;</button>
+            <button class="icon-btn" id="lastPageBtn" title="Last" aria-label="Last page" voice.name="last page">Last</button>
           </div>
         </div>
       </div>
@@ -326,30 +335,30 @@
           <div class="form-row">
             <div class="form-col">
               <label for="patientName">Patient Name</label>
-              <input id="patientName" name="patientName" required placeholder="Enter patient name">
+              <input id="patientName" name="patientName" required placeholder="Enter patient name" voice.name="patient name">
             </div>
             <div class="form-col">
               <label for="contactNumber">Contact Number</label>
-              <input id="contactNumber" name="contactNumber" type="tel" placeholder="Enter contact number">
+              <input id="contactNumber" name="contactNumber" type="tel" placeholder="Enter contact number" voice.name="contact number">
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-col">
               <label for="apptDate">Appointment Date</label>
-              <input id="apptDate" name="apptDate" type="date">
+              <input id="apptDate" name="apptDate" type="date" voice.name="appointment date">
             </div>
             <div class="form-col">
               <label for="apptTime">Appointment Time</label>
-              <input id="apptTime" name="apptTime" type="time">
+              <input id="apptTime" name="apptTime" type="time" voice.name="appointment time">
             </div>
             <div class="form-col">
               <label for="doctorSelect">Doctor</label>
-              <select id="doctorSelect" name="doctorSelect">
+              <select id="doctorSelect" name="doctorSelect" voice.name="doctor list">
                 <option value="">-- Select Doctor --</option>
-                <option value="Dr. Rob">Dr. Rob</option>
-                <option value="Dr. Lee">Dr. Lee</option>
-                <option value="Dr. Ben">Dr. Ben</option>
+                <option value="Dr. Rob" voice.name="doctor rob">Dr. Rob</option>
+                <option value="Dr. Lee" voice.name="doctor lee">Dr. Lee</option>
+                <option value="Dr. Ben" voice.name="doctor ben">Dr. Ben</option>
               </select>
             </div>
           </div>
@@ -357,30 +366,30 @@
           <div class="form-row">
             <div class="form-col">
               <label>Gender</label>
-              <div style="display:flex;gap:16px;align-items:center">
-                <label><input type="radio" name="gender" value="Male" checked> Male</label>
-                <label><input type="radio" name="gender" value="Female"> Female</label>
+              <div style="display:flex;gap:16px;align-items:center" voice.name="gender">
+                <label><input type="radio" name="gender" value="Male" voice.name="male" checked> Male</label>
+                <label><input type="radio" name="gender" value="Female" voice.name="female"> Female</label>
               </div>
             </div>
 
             <div class="form-col">
               <label>Assistance</label>
-              <div style="display:flex;gap:12px;align-items:center">
-                <label><input type="checkbox" name="assistances" value="Wheelchair"> Wheelchair</label>
-                <label><input type="checkbox" name="assistances" value="Disabled"> Disabled</label>
-                <label><input type="checkbox" name="assistances" value="Allergy"> Allergy</label>
+              <div style="display:flex;gap:12px;align-items:center" voice.name="assistance">
+                <label><input type="checkbox" name="assistances" value="Wheelchair" voice.name="wheelchair"> Wheelchair</label>
+                <label><input type="checkbox" name="assistances" value="Disabled" voice.name="disabled"> Disabled</label>
+                <label><input type="checkbox" name="assistances" value="Allergy" voice.name="allergy"> Allergy</label>
               </div>
             </div>
 
             <div class="form-col">
               <label for="notes">Notes</label>
-              <input id="notes" name="notes" placeholder="Short notes (optional)">
+              <input id="notes" name="notes" placeholder="Short notes (optional)" voice.name="notes">
             </div>
           </div>
 
           <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px;">
-            <button type="button" class="btn" id="cancelForm">Cancel</button>
-            <button type="submit" class="btn primary" id="submitFormBtn">Save Appointment</button>
+            <button type="button" class="btn" id="cancelForm" voice.name="cancel appointment">Cancel</button>
+            <button type="submit" class="btn primary" id="submitFormBtn" voice.name="create appointment">Create Appointment</button>
           </div>
         </form>
       </div>
@@ -490,7 +499,7 @@
     <div id="reports-page" class="card hidden" style="margin-top:18px;">
       <h2 style="margin-top:0">Reports &amp; Records</h2>
 
-      <form id="reportsForm" aria-label="Reports filter form">
+      <form id="reportsForm" aria-label="Reports filter form" voice.name="Report Form">
         <div class="form-row">
           <div class="form-col">
             <label>Report Type</label>
@@ -505,7 +514,7 @@
         <div class="form-row" style="margin-top:16px;">
           <div class="form-col">
             <label>Doctor</label>
-            <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:center">
+            <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:center" voice.name="doctor checkbox">
               <label><input type="checkbox" name="reportDoctor" value="Dr. Rob" voice.name="rob"> Dr. Rob</label>
               <label><input type="checkbox" name="reportDoctor" value="Dr. Lee" voice.name="lee"> Dr. Lee</label>
               <label><input type="checkbox" name="reportDoctor" value="Dr. Ben" voice.name="ben"> Dr. Ben</label>
@@ -516,14 +525,14 @@
         <div class="form-row" style="margin-top:16px;">
           <div class="form-col">
             <label for="reportStart">Start Date</label>
-            <input id="reportStart" type="date">
+            <input id="reportStart" type="date" voice.name="start date">
           </div>
           <div class="form-col">
             <label for="reportEnd">End Date</label>
-            <input id="reportEnd" type="date">
+            <input id="reportEnd" type="date" voice.name="end date">
           </div>
           <div class="form-col" style="display:flex;align-items:flex-end;justify-content:flex-end">
-            <button type="button" class="btn primary" id="generateReportBtn">Generate Report</button>
+            <button type="button" class="btn primary" id="generateReportBtn" voice.name="generate report">Generate Report</button>
           </div>
         </div>
       </form>
@@ -539,7 +548,7 @@
         </table>
 
         <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:12px;" id="reportActions" class="hidden">
-          <button type="button" class="btn primary" id="downloadReportBtn">Download Report</button>
+          <button type="button" class="btn primary" id="downloadReportBtn" voice.name="download report">Download Report</button>
         </div>
 
       </div>
@@ -632,13 +641,21 @@
         Are you sure you want to delete appointment <span id="deleteModalMessage" style="font-weight:600"></span>? This action cannot be undone.
       </div>
       <div class="modal-actions">
-        <button id="cancelDeleteBtn" type="button" class="btn">Cancel</button>
-        <button id="confirmDeleteBtn" type="button" class="btn btn-danger confirm">Delete</button>
+        <button id="cancelDeleteBtn" type="button" class="btn" voice.name="discard">Discard</button>
+        <button id="confirmDeleteBtn" type="button" class="btn btn-danger confirm" voice.name="delete">Delete</button>
       </div>
     </div>
   </div>
 
-  <!-- <script src="../../dist/voicekom.js"></script> -->
+  <script>
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.form-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+  </script>
+  <script src="../../dist/voicekom.js"></script>
   <script src="script.js"></script>
 </body>
 

@@ -26,12 +26,14 @@ export class UIHandler {
 
   // State
   private transcription: string | null = null;
+  private isEditingInline = false; // Added by me to hold inline editing state
 
   // Constants
   private readonly SVG_ICONS = {
     RECORD: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 15c2.21 0 4-1.79 4-4V5c0-2.21-1.79-4-4-4S8 2.79 8 5v6c0 2.21 1.79 4 4 4zm0-2c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2zm4 2v1c0 2.76-2.24 5-5 5s-5-2.24-5-5v-1H4v1c0 3.53 2.61 6.43 6 6.92V23h4v-2.08c3.39-.49 6-3.39 6-6.92v-1h-2z" fill="currentColor"/></svg>',
     STOP: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M6 6h12v12H6z" fill="currentColor"/></svg>',
-    PROCESSING: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 4V2C6.48 2 2 6.48 2 12h2c0-4.42 3.58-8 8-8z" fill="currentColor"><animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="1s" from="0 12 12" to="360 12 12" repeatCount="indefinite"/></path></svg>'
+    PROCESSING: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 4V2C6.48 2 2 6.48 2 12h2c0-4.42 3.58-8 8-8z" fill="currentColor"><animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="1s" from="0 12 12" to="360 12 12" repeatCount="indefinite"/></path></svg>',
+    EDIT: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" fill="currentColor"/></svg>'
   };
 
   // CSS Class Selectors
@@ -133,6 +135,23 @@ export class UIHandler {
       pointer-events: none;
     }
     @keyframes wave-pulse { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; } 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.3; } 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; } }
+
+    /* --- Inline Edit Mode Styles --- */
+    .transcription-text[contenteditable="true"] {
+      border-bottom: 1px dashed #2B6CB0;
+      outline: none;
+      padding: 2px;
+    }
+
+    .transcription-icon.edit-mode {
+      color: #2B6CB0; /* blue-ish for edit */
+      transition: color 0.3s ease;
+    }
+
+    .transcription-icon.edit-mode:hover {
+      background-color: rgba(43, 108, 176, 0.1);
+      border-radius: 4px;
+    }
     `;
     styleElement.textContent = cssContent + customAnimationStyles;
     document.head.appendChild(styleElement);
@@ -179,6 +198,9 @@ export class UIHandler {
       } else if (action === ButtonMode.STOP) {
         this.eventBus.emit(SpeechEvents.STOP_BUTTON_PRESSED);
       }
+
+      // Toggle edit-mode color
+      this.actionButton.classList.toggle('edit-mode');
     });
   }
   
@@ -282,6 +304,8 @@ export class UIHandler {
   }
 
   private syncTranscriptionDisplay(): void {
+    if (this.isEditingInline) return;
+    
     if (!this.transcriptionDisplay) {
       this.logger.warn('Transcription display element not found');
       return;
@@ -289,8 +313,48 @@ export class UIHandler {
     const trimmed = this.transcription?.trim() ?? '';
     const hasContent = trimmed.length > 0;
     if (hasContent) {
-      this.transcriptionDisplay.textContent = trimmed;
-      this.transcriptionDisplay.style.display = 'block';
+      // Insert text + icon HTML
+      this.transcriptionDisplay.innerHTML = `
+        <span class="transcription-text">${trimmed}</span>
+        <span class="transcription-icon">${this.SVG_ICONS.EDIT}</span>
+      `;
+      this.transcriptionDisplay.style.display = 'flex'; // Use flex for alignment
+      this.transcriptionDisplay.style.justifyContent = 'space-between';
+      this.transcriptionDisplay.style.alignItems = 'center';
+
+      const textEl = this.transcriptionDisplay.querySelector('.transcription-text') as HTMLElement;
+      const editIcon = this.transcriptionDisplay.querySelector('.transcription-icon') as HTMLElement;
+
+      if (!textEl || !editIcon) return;
+
+      // Click on text -> enable editing
+      textEl.addEventListener('click', () => {
+        this.isEditingInline = true;
+        textEl.setAttribute('contenteditable', 'true');
+        textEl.focus();
+        editIcon.classList.add('edit-mode');
+        this.eventBus.emit(SpeechEvents.EDIT_TRANSCRIPTION_STARTED, this.transcription);
+      });
+
+      // Press Enter or click outside -> save edit
+      const saveChanges = () => {
+        this.isEditingInline = false;
+        textEl.setAttribute('contenteditable', 'false');
+        this.transcription = textEl.innerText.trim();
+        editIcon.classList.remove('edit-mode');
+        this.eventBus.emit(SpeechEvents.EDIT_TRANSCRIPTION_FINISHED, this.transcription);
+      };
+
+      textEl.addEventListener('blur', saveChanges);
+      textEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          textEl.blur();
+        }
+      });
+
+      // this.transcriptionDisplay.textContent = trimmed;
+      // this.transcriptionDisplay.style.display = 'block';
       this.restoreTranscriptionOpacity();
       this.expandWidget();
     } else {

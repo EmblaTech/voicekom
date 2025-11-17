@@ -31,7 +31,7 @@ export class CoreModule {
     if (config.wakeWords) {
       console.log(`Initializing wake word detector with: ${config.wakeWords.join(', ')}`);
       console.log(`Sleep words are: ${config.sleepWords ? config.sleepWords.join(', ') : 'none'}`);
-      this.wakeWordDetector.init(config.wakeWords, config.sleepWords);
+      this.wakeWordDetector.init(config.lang, config.wakeWords, config.sleepWords); // Added lang parameter
       this.wakeWordDetector.start();
     }
   }
@@ -80,7 +80,7 @@ export class CoreModule {
         this.nluModule.startListeningSession(); 
       }
     });
-    
+
     this.eventBus.on(SpeechEvents.STOP_BUTTON_PRESSED, () => {
       stopSessionLogic();
     });
@@ -167,6 +167,32 @@ export class CoreModule {
       if(this.status.get().value === StatusType.EXECUTING) {
         this.eventBus.emit(SpeechEvents.ACTUATOR_COMPLETED);
       }
+    });
+
+    // Pause listening when editing starts
+    this.eventBus.on(SpeechEvents.EDIT_TRANSCRIPTION_STARTED, () => {
+        // if (this.isListeningModeActive) {
+        //     console.log("Pausing listening for inline edit...");
+        //     this.isListeningModeActive = false;
+        //     this.nluModule.forceStopSession(); // stops audio capture
+        // }
+
+        stopSessionLogic();
+    });
+
+    // Resume listening when editing finishes
+    this.eventBus.on(SpeechEvents.EDIT_TRANSCRIPTION_FINISHED, (updatedText: string) => {
+        console.log("Inline edit finished, updated text:", updatedText);
+        
+        // Emit updated transcription to the system
+        // this.isListeningModeActive = false;
+        this.eventBus.emit(SpeechEvents.TRANSCRIPTION_UPDATED, updatedText);
+
+        if (!this.isListeningModeActive) {
+          this.isListeningModeActive = true;
+          this.wakeWordDetector.stop();
+          this.nluModule.startListeningSession();
+        }
     });
   }
 }

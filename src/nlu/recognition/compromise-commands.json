@@ -44,6 +44,29 @@
     "entities": ["target"]
   },
 
+  "zoom": {
+    "utterances": [
+      "zoom [<direction>(in|out)]",
+      "go [<direction>(in|out)]"
+    ],
+    "entities": ["direction"]
+  },
+
+  "undo": {
+    "utterances": [
+      "undo action"
+    ],
+    "entities": []
+  },
+
+  "undo_target": {
+    "utterances": [
+      "undo [<target>.+]",
+      "undo [<target>.+] (in|from|as) [<group>.+]"
+    ],
+    "entities": ["target"]
+  },
+
   "check_all": {
     "utterances": [
       "check all [<targetGroup>.+]"

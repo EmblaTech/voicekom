@@ -7,7 +7,7 @@ import { unsubscribe } from 'diagnostics_channel';
 // Interface for processed entities with resolved DOM elements
 export interface ProcessedEntities {
   rawentities: Entities;
-  targetElement?: HTMLElement | undefined;
+  targetElement?: HTMLElement | HTMLInputElement | HTMLTextAreaElement | undefined;
   targetElements?: HTMLElement[];
   groupElement?: HTMLElement | undefined;
   targetName?: string | undefined; // Normalized value for input actions
@@ -25,11 +25,24 @@ interface ValueNormalizer {
   normalize(element: HTMLElement, value: string): string;
 }
 
+// Added by me - to keep a record of action history and target
+interface HistoryEntry {
+  target: any,
+  undoFn: () => void;
+}
+
 export class VoiceActuator implements IVoiceActuator {
+  // Added by me - to keep a record of action history
+  // private historyStack: (() => void)[] = [];
+  private historyStack: HistoryEntry[] = [];
+
   private actionMap!: Map<IntentTypes, Action>;
   private elementProcessors: ElementProcessor[] = [];
   private valueNormalizers: ValueNormalizer[] = [];
   private logger = Logger.getInstance();
+
+  // Added by me - variable for current zoom level
+  private currentZoom = 1;
 
   constructor(private eventBus: EventBus) {
     this.initializeProcessors();
@@ -72,6 +85,10 @@ export class VoiceActuator implements IVoiceActuator {
     this.registerAction(IntentTypes.TYPE_TEXT, { execute: (entities) => this.executeInputAction(entities) });
     this.registerAction(IntentTypes.CLICK_ELEMENT_IN_CONTEXT, { execute: (entities) => this.executeTableClickAction(entities) });
 
+    // Add zoom in and zoom out actions (see if it can be handled in the same function as scroll)
+    this.registerAction(IntentTypes.ZOOM, { execute: (entities) => this.executeZoomAction(entities)});
+    this.registerAction(IntentTypes.UNDO, { execute: () => this.executeUndoAction()});
+    this.registerAction(IntentTypes.UNDO_TARGET, { execute: (entities) => { const target = entities.rawentities?.target as any; return this.executeUndoTargetAction(target)}});
   }
   
   private registerAction(intentName: IntentTypes, action: Action): void {
@@ -341,11 +358,30 @@ public findFinalTarget(entity: VoiceEntity, context?: HTMLElement): HTMLElement 
       return false;
     }
   
+    const el = entities.targetElement;
     if (entities.targetElement instanceof HTMLInputElement || 
         entities.targetElement instanceof HTMLTextAreaElement) {
-      entities.targetElement.value = entities.rawentities.value as string;
-      entities.targetElement.dispatchEvent(new Event('input', { bubbles: true }));
-      entities.targetElement.dispatchEvent(new Event('change', { bubbles: true }));
+      const inputEl = el as HTMLInputElement | HTMLTextAreaElement
+      const previousValue = inputEl.value;
+      const newValue = entities.rawentities.value as string;
+
+      inputEl.value = newValue;
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+      inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+      // entities.targetElement.value = entities.rawentities.value as string;
+      // entities.targetElement.dispatchEvent(new Event('input', { bubbles: true }));
+      // entities.targetElement.dispatchEvent(new Event('change', { bubbles: true }));
+
+      this.historyStack.push({
+        target: entities.rawentities.target as string,
+        undoFn: () => {
+          // Defensive: check element still in DOM and is still an input/textarea
+          inputEl.value = previousValue;
+          inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+
       this.logger.info(`[VoiceActuator]  Filled input "${entities.rawentities.target}" with value "${entities.rawentities.value as string}"`);
       return true;
     }
@@ -360,11 +396,28 @@ public findFinalTarget(entity: VoiceEntity, context?: HTMLElement): HTMLElement 
       return false;
     }
     
+    const el = entities.targetElement;
     if (entities.targetElement instanceof HTMLInputElement && entities.targetElement.type === 'checkbox') {
-      if (entities.targetElement.checked !== check) {
-        entities.targetElement.checked = check;
-        entities.targetElement.dispatchEvent(new Event('change', { bubbles: true }));
+      const inputState = el as HTMLInputElement
+      const previousState = inputState.checked;
+      
+      // if (entities.targetElement.checked !== check) {
+      //   entities.targetElement.checked = check;
+      //   entities.targetElement.dispatchEvent(new Event('change', { bubbles: true }));
+      // }
+      if (inputState.checked !== check) {
+        inputState.checked = check;
+        inputState.dispatchEvent(new Event('change', { bubbles: true }));
       }
+
+      this.historyStack.push({
+        target: entities.rawentities.target as string,
+        undoFn: () => {
+          inputState.checked = previousState;
+          inputState.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+
       this.logger.info(`[VoiceActuator]  ${check ? 'Checked' : 'Unchecked'} checkbox "${entities.rawentities.target}"`);
       return true;
     }
@@ -397,7 +450,7 @@ public findFinalTarget(entity: VoiceEntity, context?: HTMLElement): HTMLElement 
     if (!entities.targetElement) {
       this.logger.warn(`[VoiceActuator]  No valid target for selection action`);
       return false;
-    } else if (!entities.targetName) {
+    } else if (!entities.targetName) { //replaced entities.targetName with rawentities.target
       this.logger.warn(`[VoiceActuator]  No valid option for selection action`);
       return false;
     }
@@ -458,9 +511,9 @@ public findFinalTarget(entity: VoiceEntity, context?: HTMLElement): HTMLElement 
       const optionValue = option.value.toLowerCase();
       
       if (optionText === targetLower || 
-          optionValue === targetLower || 
+          optionValue === targetLower ||
           optionText.includes(targetLower) || 
-          this.calculateMatchScore(optionText, targetLower) > 50) {
+          this.calculateMatchScore(optionText, targetLower) > 60) { // original=50
         
         selectElement.value = option.value;
         selectElement.dispatchEvent(new Event('change', { bubbles: true }));
@@ -472,6 +525,67 @@ public findFinalTarget(entity: VoiceEntity, context?: HTMLElement): HTMLElement 
     this.logger.warn(`[VoiceActuator]  No matching option found for "${targetName}"`);
     return false;
   }
+
+  private executeZoomAction(entities: ProcessedEntities): boolean {
+  if (!entities.rawentities.direction) {
+    this.logger.warn(`[VoiceActuator]  Missing direction parameter for zoom action`);
+    return false;
+  }
+
+  const zoomStep = 0.1; // zoom increment (10%)
+  const direction = (isVoiceEntity(entities.rawentities.direction) 
+    ? entities.rawentities.direction.english
+    : entities.rawentities.direction).toLowerCase();
+
+  try {
+    switch (direction) {
+      case 'in':
+        this.currentZoom += zoomStep;
+        break;
+      case 'out':
+        this.currentZoom = Math.max(0.5, this.currentZoom - zoomStep); // limit zoom out to 50%
+        break;
+      default:
+        this.logger.warn(`[VoiceActuator]  Unknown zoom direction "${direction}"`);
+        return false;
+    }
+
+    // Apply zoom using CSS zoom property (compatible with most browsers)
+    document.body.style.zoom = this.currentZoom.toString();
+
+    this.logger.info(`[VoiceActuator]  Zoomed ${direction} by ${Math.round(this.currentZoom * 100)}%`);
+    return true;
+    } catch (error) {
+    this.logger.error(`[VoiceActuator]  Error during zoom action: ${error}`);
+    return false;
+  }
+}
+
+  private executeUndoAction(): boolean {
+    const entry = this.historyStack.pop();
+
+    if (!entry) {
+      this.logger.warn("No undo actions available")
+          return false;
+    }
+
+    entry.undoFn();
+    return true;
+  }
+
+  private executeUndoTargetAction(target: any): boolean {
+    const index = this.historyStack.map(e => e.target.english).lastIndexOf(target.english);
+    if (index === -1) {
+      this.logger.warn(`No undo actions available for target: ${target}`);
+      return false;
+    }
+
+    const entry = this.historyStack.splice(index, 1)[0];
+    entry.undoFn();
+    return true;
+  }
+
+
   private executeScrollAction(entities: ProcessedEntities): boolean {
   if (!entities.rawentities.direction) {
     this.logger.warn(`[VoiceActuator]  Missing direction parameter for scroll action`);

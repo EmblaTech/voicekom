@@ -33,6 +33,14 @@ export enum SpeechEvents {
   ACTION_PAUSED = 'actionPaused',
   EXECUTION_COMPLETE = 'execution-complete',
   ACTUATOR_COMPLETED = 'actuatorCompleted',
+  // EDIT_TRANSCRIPTION_CLICKED = 'editTranscriptionClicked',
+  // TRANSCRIPTION_UPDATED = 'transcriptionUpdated',
+  EDIT_TRANSCRIPTION_STARTED = 'edit_transcription_started',
+  EDIT_TRANSCRIPTION_FINISHED = 'edit_transcription_finished',
+  // EDIT_TRANSCRIPTION = 'edit_transcription',
+  TRANSCRIPTION_UPDATED = 'transcriptionUpdated',
+
+
   // Error Events
   ERROR_OCCURRED = 'errorOccurred'
 }

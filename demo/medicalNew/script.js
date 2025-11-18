@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       sleepWords: ['Stop listening', 'stop'],
       containerId: 'speech-container',
       lang: 'en-US',
-    transcription: {
+      transcription: {
       provider: 'default',
       apiKey: '' 
     },
@@ -667,8 +667,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         <td style="text-align:center"><button class="icon-btn notify-btn" data-ref="${a.ref}" title="Toggle notify">🔔</button></td>
         <td style="text-align:right">
           <div class="row-actions">
-            <button class="btn" data-action="edit" data-ref="${a.ref}">Edit</button>
-            <button class="btn" data-action="delete" data-ref="${a.ref}" style="border-color: #ffd6d6;">Delete</button>
+            <button class="btn" data-action="edit" voice.name="edit appointment" data-ref="${a.ref}">Edit</button>
+            <button class="btn" data-action="delete" voice.name="delete appointment" data-ref="${a.ref}" style="border-color: #ffd6d6;">Delete</button>
           </div>
         </td>
       `;
@@ -896,7 +896,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ---------- modal helpers ----------
   function openDeleteModal(ref, patientName){
     pendingDeleteRef = ref;
-    if (deleteModalMessage) deleteModalMessage.textContent = `${escapeHtml(ref)} for ${escapeHtml(patientName)}`;
+    // if (deleteModalMessage) deleteModalMessage.textContent = `${escapeHtml(ref)} for ${escapeHtml(patientName)}`;
+    if (deleteModalMessage) deleteModalMessage.textContent = `${escapeHtml(patientName)}`;
+
     deleteModal.classList.remove('hidden');
     // focus first actionable button
     setTimeout(()=> confirmDeleteBtn.focus(), 50);

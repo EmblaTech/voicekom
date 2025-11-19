@@ -266,7 +266,7 @@
 
   <main class="page">
     <!-- top-level container card -->
-    <div id="appointments-page" class="card">
+    <div id="appointments-page" class="card" voice.name="appointments Form">
 
       <!-- Appointments top header -->
       <div class="appointments-header">
@@ -331,6 +331,7 @@
         <h2 id="formTitle">Patient Appointment</h2>
 
         <form id="appointmentForm">
+        <!-- <form id="appointmentForm" voice.name="appointments Form"> -->
           <input type="hidden" id="editRef" value="">
           <div class="form-row">
             <div class="form-col">
@@ -356,9 +357,9 @@
               <label for="doctorSelect">Doctor</label>
               <select id="doctorSelect" name="doctorSelect" voice.name="doctor list">
                 <option value="">-- Select Doctor --</option>
-                <option value="Dr. Rob" voice.name="doctor rob">Dr. Rob</option>
-                <option value="Dr. Lee" voice.name="doctor lee">Dr. Lee</option>
-                <option value="Dr. Ben" voice.name="doctor ben">Dr. Ben</option>
+                <option value="Dr. Rob" voice.name="dr. doctor rob">Dr. Rob</option>
+                <option value="Dr. Lee" voice.name="dr. doctor lee">Dr. Lee</option>
+                <option value="Dr. Ben" voice.name="dr. doctor ben">Dr. Ben</option>
               </select>
             </div>
           </div>
@@ -389,7 +390,7 @@
 
           <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px;">
             <button type="button" class="btn" id="cancelForm" voice.name="cancel appointment">Cancel</button>
-            <button type="submit" class="btn primary" id="submitFormBtn" voice.name="create appointment">Create Appointment</button>
+            <button type="submit" class="btn primary" id="submitFormBtn" voice.name="create update appointment">Create Appointment</button>
           </div>
         </form>
       </div>
@@ -499,7 +500,7 @@
     <div id="reports-page" class="card hidden" style="margin-top:18px;">
       <h2 style="margin-top:0">Reports &amp; Records</h2>
 
-      <form id="reportsForm" aria-label="Reports filter form" voice.name="Report Form">
+      <form id="reportsForm" aria-label="Reports filter form" voice.name="Report Reports Form">
         <div class="form-row">
           <div class="form-col">
             <label>Report Type</label>
@@ -514,7 +515,7 @@
         <div class="form-row" style="margin-top:16px;">
           <div class="form-col">
             <label>Doctor</label>
-            <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:center" voice.name="doctor checkbox">
+            <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:center" voice.name="doctors checkbox">
               <label><input type="checkbox" name="reportDoctor" value="Dr. Rob" voice.name="rob"> Dr. Rob</label>
               <label><input type="checkbox" name="reportDoctor" value="Dr. Lee" voice.name="lee"> Dr. Lee</label>
               <label><input type="checkbox" name="reportDoctor" value="Dr. Ben" voice.name="ben"> Dr. Ben</label>
@@ -658,7 +659,7 @@
             event.target.classList.add('active');
         }
   </script>
-  <script src="../../dist/voicekom.js"></script>
+  <!-- <script src="../../dist/voicekom.js"></script> -->
   <script src="script.js"></script>
 </body>
 

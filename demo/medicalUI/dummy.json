@@ -1,0 +1,22 @@
+[
+  {
+    "patientName": "Alex Smith",
+    "contactNumber": "073444678",
+    "apptDate": "2025-11-20",
+    "apptTime": "09:35",
+    "doctor": "Dr. Rob",
+    "gender": "Male",
+    "assistance": [],
+    "notes": "dummy note"
+  },
+  {
+    "patientName": "Kevin Lord",
+    "contactNumber": "07785647990",
+    "apptDate": "2025-12-02",
+    "apptTime": "13:30",
+    "doctor": "Dr. Ben",
+    "gender": "Male",
+    "assistance": [],
+    "notes": "Physio consult"
+  }
+]

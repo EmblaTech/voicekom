@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clinic Reception Dashboard</title>
+
+
+  <style>
+    /* --- NEW UI: Color Palette & Core Variables --- */
+    :root {
+      --brand: #007bff; /* Softer blue for active elements */
+      --primary-green: #16a34a; /* Green for primary CTA */
+      --bg: #f0f5ff; /* Lighter page background */
+      --card: #ffffff;
+      --muted: #6c757d; /* Slightly softer muted text */
+      --danger: #dc3545;
+      --table-header-bg: #eaf2fd;
+      --table-header-text: #495057;
+      --icon-btn-border: #dee2e6;
+      --icon-btn-color: #007bff;
+
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      --radius: 12px; /* Softer radius */
+      --gap: 16px;
+      font-family: "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: #212529;
+    }
+
+    /* --- NEW UI: Updated Header --- */
+    header {
+      background: var(--card);
+      color: #111;
+      padding: 12px 24px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .brand { display:flex; gap: 12px; align-items:center; font-weight: 700; font-size: 1.5rem; }
+    .brand .logo-dot { color: #f54257; }
+
+    /* --- NEW UI: Updated Tabs --- */
+    .tabs {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .tabs li {
+  color: var(--muted);
+  cursor: pointer;
+  padding: 14px 4px; /* Adjust padding for underline */
+  border-bottom: 3px solid transparent;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  background-color: transparent; /* Ensure no background */
+}
+    .tabs li:hover {
+    color: var(--brand-active);
+}
+    .tabs li.active {
+  color: var(--brand-active);
+  border-bottom-color: var(--brand-active);
+  background-color: transparent; /* Ensure no background */
+}
+
+    .page {
+  max-width: 1360px;
+  margin: 32px auto 64px auto; /* Adds 64px of margin to the bottom */
+  padding: 0 24px;
+}
+
+    /* --- NEW UI: Main Card Style --- */
+    .card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px 24px 32px 24px; /* Increased bottom padding */
+  box-shadow: var(--shadow);
+  border: 1px solid #e9ecef;
+}
+
+    /* --- NEW UI: Appointments Header Layout --- */
+    .appointments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  /* REMOVE the border-bottom and padding-bottom properties */
+}
+    .appointments-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .search-input {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  border: 1px solid #ced4da;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+    .search-input:focus-within {
+      border-color: #86b7fe; /* A more subtle focus color */
+      box-shadow: none; /* Remove the glow */
+    }
+    .search-input input {
+      border: 0;
+      outline: 0;
+      background: transparent;
+      font-size: 0.95rem;
+      width: 100%;
+    }
+
+    /* --- NEW UI: Table Styles --- */
+    .table {
+      width: 100%;
+      margin-top: 14px;
+      border-collapse: collapse;
+    }
+
+    .table thead th {
+      text-align: left;
+      padding: 16px 14px;
+      color: var(--table-header-text);
+      background: var(--table-header-bg);
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .table thead th:first-child { border-top-left-radius: 8px; }
+    .table thead th:last-child { border-top-right-radius: 8px; }
+
+
+    .table tbody td {
+      padding: 16px 14px;
+      border-bottom: 1px solid #e9ecef;
+      vertical-align: middle;
+    }
+
+    /* --- NEW UI: Action Icon Buttons --- */
+    .row-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .action-icon-btn {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        border: 1px solid var(--icon-btn-border);
+        background: #fff;
+        cursor: pointer;
+        color: var(--icon-btn-color);
+        transition: background-color 0.2s, color 0.2s;
+    }
+    .action-icon-btn:hover {
+        background-color: #f0f5ff;
+        border-color: #b9c2cb;
+    }
+    .action-icon-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+    .action-icon-btn.notify-btn.active {
+      background: #fffbe6;
+      border-color: #ffe58f;
+      color: #faad14;
+    }
+    
+    /* Button Styles */
+    .btn {
+      background: #fff;
+      border: 1px solid #ced4da;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: none;
+      transition: background-color 0.2s;
+    }
+
+    /* --- NEW UI: Primary Green "Create" Button --- */
+    .btn.primary {
+  background: var(--primary-green);
+  color: #fff;
+  border: 1px solid var(--primary-green);
+  padding: 10px 24px; /* Increase horizontal padding to make it wider */
+}
+    .btn.primary:hover {
+        background: #218838;
+    }
+
+    /* --- EXISTING PAGINATION: No changes made as per request --- */
+    .pagination {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:18px;
+    }
+    .pagination .left, .pagination .center, .pagination .right { display:flex; align-items:center; gap:12px; }
+    .select { padding:6px 8px; border-radius:6px; border:1px solid #e6eef9; background:#fff; }
+    .icon-btn { width:38px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:1px solid #e6eef9; background:#fff; cursor:pointer; }
+    .btn:disabled,
+    .btn[aria-disabled="true"],
+    .icon-btn:disabled,
+    .icon-btn[aria-disabled="true"] {
+      background:#e5e7eb; border-color:#d1d5db; color:#9ca3af; cursor:not-allowed;
+    }
+
+    /* --- (All other styles from original file) --- */
+    .report-table thead th{ background:#f3f7fd; border-bottom-color:#dbe8fb; }
+    .report-table{ border-radius:10px; overflow:hidden; }
+    .report-table tbody tr:nth-child(even){background:#fafcff}
+    .report-meta{display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px 0;font-size:0.85rem;color:var(--muted)}
+    .form-row { display:flex; gap:12px; align-items:center; margin-top:12px; }
+    .form-col { flex:1; min-width:0; }
+    label { display:block; font-weight:600; color:var(--muted); margin-bottom:6px; font-size:0.9rem; }
+    
+    input, select, textarea { width:100%; padding:10px;border-radius:8px;border:1px solid #e6eef9; background:#fbfdff; font-size:0.95rem; box-sizing:border-box }
+
+    input, select, textarea {
+  width: 100%;
+  padding: 12px; /* Increased padding */
+  border-radius: 8px;
+  border: 1px solid #cce0ff; /* Light blue border */
+  background: #f8fafc; /* Very light background */
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+    textarea { min-height:100px; resize:vertical; }
+    .hidden { display:none !important; }
+    .toast { position:fixed; top:20px; right:20px; background: #111; color:#fff; padding:12px 16px; border-radius:8px; box-shadow: 0 8px 26px rgba(0,0,0,0.22); z-index:1200; opacity:0; transform:translateY(-6px); transition: all .28s ease; }
+    .toast.show { opacity:1; transform:translateY(0); }
+    @media (max-width: 880px) { .search-input { min-width: 180px; } .form-row { flex-direction:column } }
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:2000}
+    .modal-backdrop.hidden{display:none}
+    .modal-dialog{background:#fff;border-radius:12px;box-shadow:var(--shadow);width:min(420px,92vw);padding:18px}
+    .modal-title{font-weight:700;margin:0 0 8px 0}
+    .modal-body{color:var(--muted);margin-bottom:16px}
+    .modal-actions{display:flex;justify-content:flex-end;gap:10px}
+    .btn-danger{background:#fff;border:1px solid #ffd6d6}
+    .btn-danger.confirm{background:var(--danger);color:#fff;border-color:var(--danger)}
+
+    .actions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Space between search and button */
+  min-width: 280px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+.grid-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+}
+.radio-group, .checkbox-group {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  padding-top: 8px;
+}
+.form-footer-text {
+  text-align: center;
+  margin-top: 32px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.form-footer-text a {
+  color: var(--brand-active);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+#cancelForm.btn {
+  background-color: #f1f5f9; /* Light gray background */
+  border-color: #e2e8f0;
+  color: var(--muted);
+}
+  
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+
+<body>
+  <header>
+    <div class="brand">embla</div>
+    <ul class="tabs" role="tablist" aria-label="Main navigation">
+      <li class="tab-btn active" data-tab="appointments" onclick="openTab('appointments')">Appointments</li>
+      <li class="tab-btn" data-tab="billing" onclick="openTab('billing')">Billing</li>
+      <li class="tab-btn" data-tab="research" onclick="openTab('research')">Research</li>
+      <li class="tab-btn" data-tab="reports" onclick="openTab('reports')">Reports</li>
+      <li class="tab-btn" data-tab="help" onclick="openTab('help')">Help</li>
+    </ul>
+  </header>
+
+  <main class="page">
+    <div id="appointments-page" class="card">
+      <div class="appointments-header">
+        <h2>List of Appointments</h2>
+
+        <!-- <div class="search-container">
+          <div class="search-input" title="Search appointments">
+            <input id="searchInput" placeholder="Search..." />
+          </div>
+          <button id="createBtnTop" class="btn primary">Create Appointment</button>
+        </div> -->
+            
+        <!-- New structure for vertically stacked actions -->
+        <!-- <div class="actions-group">
+          <div class="search-input" title="Search appointments">
+            <input id="searchInput" placeholder="Search..." />
+          </div>
+          <button id="createBtnTop" class="btn primary">Create Appointment</button>
+        </div> -->
+
+            
+<div class="header-actions">
+  <div class="search-input" title="Search appointments">
+    <input id="searchInput" placeholder="Search" /> <!-- Placeholder changed to match image -->
+  </div>
+  <button id="createBtnTop" class="btn primary">Create Appointment</button>
+</div>
+
+  
+
+  
+
+
+      </div>
+
+      <div id="appointmentsListView">
+        <table class="table" aria-label="Appointments table">
+          <thead>
+            <tr>
+              <th>Patient name</th>
+              <th>Appt date & time</th>
+              <th>Doctor</th>
+              <th>Contact number</th>
+              <th>Gender</th>
+              <th>Assistance</th>
+              <th></th> <!-- Header for actions column -->
+            </tr>
+          </thead>
+          <tbody id="appointmentsTbody"></tbody>
+        </table>
+
+        <div class="pagination">
+          <div class="left">
+            <label style="font-weight:600;color:var(--muted)">Items per page:</label>
+            <select id="itemsPerPage" class="select" aria-label="Items per page">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <div id="rangeLabel" style="color:var(--muted)" aria-live="polite">0 of 0 items</div>
+          </div>
+          <div class="right" style="justify-content:flex-end;">
+            <button class="icon-btn" id="firstPageBtn" title="First" aria-label="First page">First</button>
+            <button class="icon-btn" id="prevPageBtn" title="Previous" aria-label="Previous page">&lt;</button>
+            <div id="pageLabel" style="color:var(--muted)" aria-live="polite">1 of 1</div>
+            <button class="icon-btn" id="nextPageBtn" title="Next" aria-label="Next page">&gt;</button>
+            <button class="icon-btn" id="lastPageBtn" title="Last" aria-label="Last page">Last</button>
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- The FORM view markup is unchanged -->
+      <!-- <div id="appointmentsFormView" class="hidden" style="margin-top:18px;">
+          <h2 id="formTitle">Patient Appointment</h2>
+          <form id="appointmentForm">
+              <input type="hidden" id="editRef" value="">
+              <div class="form-row">
+                  <div class="form-col">
+                      <label for="patientName">Patient Name</label>
+                      <input id="patientName" name="patientName" required placeholder="Enter patient name">
+                  </div>
+                  <div class="form-col">
+                      <label for="contactNumber">Contact Number</label>
+                      <input id="contactNumber" name="contactNumber" type="tel" placeholder="Enter contact number">
+                  </div>
+              </div>
+              <div class="form-row">
+                  <div class="form-col">
+                      <label for="apptDate">Appointment Date</label>
+                      <input id="apptDate" name="apptDate" type="date">
+                  </div>
+                  <div class="form-col">
+                      <label for="apptTime">Appointment Time</label>
+                      <input id="apptTime" name="apptTime" type="time">
+                  </div>
+                  <div class="form-col">
+                      <label for="doctorSelect">Doctor</label>
+                      <select id="doctorSelect" name="doctorSelect">
+                          <option value="">-- Select Doctor --</option>
+                          <option value="Dr. Rob">Dr. Rob</option>
+                          <option value="Dr. Lee">Dr. Lee</option>
+                          <option value="Dr. Ben">Dr. Ben</option>
+                      </select>
+                  </div>
+              </div>
+              <div class="form-row">
+                  <div class="form-col">
+                      <label>Gender</label>
+                      <div style="display:flex;gap:16px;align-items:center">
+                          <label><input type="radio" name="gender" value="Male" checked> Male</label>
+                          <label><input type="radio" name="gender" value="Female"> Female</label>
+                      </div>
+                  </div>
+                  <div class="form-col">
+                      <label>Assistance</label>
+                      <div style="display:flex;gap:12px;align-items:center">
+                          <label><input type="checkbox" name="assistances" value="Wheelchair"> Wheelchair</label>
+                          <label><input type="checkbox" name="assistances" value="Disabled"> Disabled</label>
+                          <label><input type="checkbox" name="assistances" value="Allergy"> Allergy</label>
+                      </div>
+                  </div>
+                  <div class="form-col">
+                      <label for="notes">Notes</label>
+                      <input id="notes" name="notes" placeholder="Short notes (optional)">
+                  </div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px;">
+                  <button type="button" class="btn" id="cancelForm">Cancel</button>
+                  <button type="submit" class="btn primary" id="submitFormBtn">Create Appointment</button>
+              </div>
+          </form>
+      </div> -->
+
+          
+<div id="appointmentsFormView" class="hidden">
+  <h2 id="formTitle">Create Appointment</h2>
+  
+  <form id="appointmentForm">
+    <input type="hidden" id="editRef" value="">
+    
+    <!-- NEW Two-Column Grid -->
+    <div class="form-grid">
+      <!-- Left Column -->
+      <div class="grid-col">
+        <div class="form-field">
+          <label for="patientName">Patient Name</label>
+          <input id="patientName" name="patientName" required placeholder="Enter patient name">
+        </div>
+        <div class="form-field">
+          <label for="apptDate">Appointment Date</label>
+          <input id="apptDate" name="apptDate" type="date" placeholder="Chose date">
+        </div>
+        <div class="form-field">
+          <label for="doctorSelect">Doctor</label>
+          <select id="doctorSelect" name="doctorSelect">
+            <option value="">Select doctor</option>
+            <option value="Dr. Rob">Dr. Rob</option>
+            <option value="Dr. Lee">Dr. Lee</option>
+            <option value="Dr. Ben">Dr. Ben</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Gender</label>
+          <div class="radio-group">
+            <label><input type="radio" name="gender" value="Male" checked> Male</label>
+            <label><input type="radio" name="gender" value="Female"> Female</label>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column -->
+      <div class="grid-col">
+        <div class="form-field">
+          <label for="contactNumber">Contact Number</label>
+          <input id="contactNumber" name="contactNumber" type="tel" placeholder="Enter contact number">
+        </div>
+        <div class="form-field">
+          <label for="apptTime">Appointment Time</label>
+          <input id="apptTime" name="apptTime" type="time" placeholder="Chose time">
+        </div>
+        <div class="form-field">
+          <label for="notes">Note</label>
+          <input id="notes" name="notes" placeholder="Notes optional">
+        </div>
+        <div class="form-field">
+          <label>Assistance</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" name="assistances" value="Wheelchair"> Wheelchair</label>
+            <label><input type="checkbox" name="assistances" value="Disabled"> Disabled</label>
+            <label><input type="checkbox" name="assistances" value="Allergy"> Allergy</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn" id="cancelForm">Cancel</button>
+      <button type="submit" class="btn primary" id="submitFormBtn">Create Appointment</button>
+    </div>
+  </form>
+
+</div>
+
+  
+
+
+
+
+    </div>
+
+  </main>
+
+
+
+</body>
+</html>

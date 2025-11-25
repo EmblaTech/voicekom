@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clinic Reception Dashboard</title>
+  <style>
+    :root{
+      --brand:#0b79d0;
+      --bg:#f4f7fa;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --shadow: 0 4px 14px rgba(11, 121, 208, 0.08);
+      --radius: 8px;
+      --gap:16px;
+      --glass: rgba(255,255,255,0.6);
+      font-family: "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
+    }
+
+    html,body{height:100%;margin:0;background:var(--bg);color:#111}
+    header{
+      background:var(--brand);
+      color:#fff;
+      padding:18px 24px;
+      font-size:1.25rem;
+      font-weight:600;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+    }
+    .brand { display:flex; gap: 12px; align-items:center;}
+    .brand .logo {
+      width:36px;height:36px;border-radius:6px;background:rgba(255,255,255,0.12);
+      display:flex;align-items:center;justify-content:center;font-weight:700;
+    }
+    nav.topnav{
+      background:var(--brand);
+      padding: 0 20px;
+    }
+    .tabs {
+      display:flex;
+      gap: 28px;
+      align-items:center;
+      list-style:none;
+      margin:0;
+      padding:12px 0;
+    }
+    .tabs li{
+      color:#fff;
+      cursor:pointer;
+      padding:10px 8px;
+      border-radius:6px;
+      font-weight:600;
+    }
+
+    .page {
+      max-width:1360px;
+      margin:32px auto;
+      padding:0 24px;
+    }
+
+    .card {
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:26px;
+      box-shadow: var(--shadow);
+    }
+
+    /* Appointments layout */
+    .appointments-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+      margin-bottom:20px;
+    }
+
+    .search-container {
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .search-input {
+      display:flex;
+      align-items:center;
+      background:#f7f9fb;
+      border-radius:8px;
+      padding:6px 10px; /* reduced height */
+      border:1px solid #e6eef9;
+      width:260px; /* reduced width */
+      box-sizing:border-box;
+      
+    }
+
+    .search-input input{
+      border:0;outline:0;background:transparent;font-size:0.95rem;width:100%;
+    }
+
+    .table {
+      width:100%;
+      margin-top:14px;
+      border-collapse:collapse;
+    }
+
+    .table thead th{
+      text-align:left;
+      padding:14px 12px;
+      color:var(--muted);
+      font-size:0.94rem;
+      border-bottom:1px solid #eef4fb;
+    }
+
+    .table tbody td{
+      padding:14px 12px;
+      border-bottom:1px dashed #f0f4f8;
+      vertical-align:middle;
+    }
+
+    /* Reports table header highlight */
+    .report-table thead th{
+      background:#f3f7fd;
+      border-bottom-color:#dbe8fb;
+    }
+    .report-table{
+      border-radius:10px;
+      overflow:hidden;
+    }
+    .report-table tbody tr:nth-child(even){background:#fafcff}
+    .report-meta{display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px 0;font-size:0.85rem;color:var(--muted)}
+    .report-meta .badges{display:flex;gap:8px;align-items:center}
+    .pill{display:inline-block;padding:4px 8px;border-radius:20px;font-size:0.7rem;font-weight:600;letter-spacing:.5px;background:#eef4fb;color:#333}
+    .pill.status-completed{background:#e6f9ef;color:#067447}
+    .pill.status-pending{background:#fff8e6;color:#946200}
+    .pill.status-cancelled{background:#fdecec;color:#b30721}
+    .pill.pay-paid{background:#e6f9ef;color:#067447}
+    .pill.pay-pending{background:#fff8e6;color:#946200}
+    .pill.pay-none{background:#eef4fb;color:#555}
+
+    .row-actions {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .btn {
+      background:#fff;border:1px solid #e6eef9;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600;
+      box-shadow:none;
+    }
+    .btn.primary { background:var(--brand); color:#fff; border:0; }
+    .btn.ghost { background:#fff; color:var(--muted) }
+    /* Disabled button styling for better visibility */
+    .btn:disabled,
+    .btn[aria-disabled="true"] {
+      background:#e5e7eb; /* gray */
+      border-color:#d1d5db;
+      color:#9ca3af;
+      cursor:not-allowed;
+      opacity:1; /* keep readable */
+    }
+    .btn.primary:disabled,
+    .btn.primary[aria-disabled="true"] {
+      background:#cbd5e1; /* gray-blue to indicate disabled */
+      color:#ffffff;
+      border:0;
+    }
+
+    .icon-btn { width:38px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:1px solid #e6eef9; background:#fff; cursor:pointer; }
+  /* visible state for toggled notify bell */
+  .notify-btn.active { background:#fff7e6; border-color:#ffd591; }
+  .notify-btn.active::after { content:""; width:6px; height:6px; border-radius:50%; background:#faad14; display:inline-block; margin-left:8px; }
+
+    .pagination {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:18px;
+    }
+
+    .pagination .left, .pagination .center, .pagination .right { display:flex; align-items:center; gap:12px; }
+
+    .select { padding:6px 8px; border-radius:6px; border:1px solid #e6eef9; background:#fff; }
+
+    /* Form layout - looks like the old UI but polished */
+    .form-row { display:flex; gap:12px; align-items:center; margin-top:12px; }
+    .form-col { flex:1; min-width:0; }
+    label { display:block; font-weight:600; color:var(--muted); margin-bottom:6px; font-size:0.9rem; }
+    input, select, textarea { width:100%; padding:10px;border-radius:8px;border:1px solid #e6eef9; background:#fbfdff; font-size:0.95rem; box-sizing:border-box }
+    textarea { min-height:100px; resize:vertical; }
+
+    .hidden { display:none !important; }
+
+    /* toast */
+    .toast {
+      position:fixed;
+      top:20px;
+      right:20px;
+      background: #111;
+      color:#fff;
+      padding:12px 16px;
+      border-radius:8px;
+      box-shadow: 0 8px 26px rgba(0,0,0,0.22);
+      z-index:1200;
+      opacity:0;
+      transform:translateY(-6px);
+      transition: all .28s ease;
+    }
+    .toast.show { opacity:1; transform:translateY(0); }
+
+    /* small screens */
+    @media (max-width: 880px) {
+      .search-input { min-width: 180px; }
+      .form-row { flex-direction:column }
+    }
+
+  /* end of overrides */
+
+    /* confirmation modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:2000}
+    .modal-backdrop.hidden{display:none}
+    .modal-dialog{background:#fff;border-radius:12px;box-shadow:var(--shadow);width:min(420px,92vw);padding:18px}
+    .modal-title{font-weight:700;margin:0 0 8px 0}
+    .modal-body{color:var(--muted);margin-bottom:16px}
+    .modal-actions{display:flex;justify-content:flex-end;gap:10px}
+    .btn-danger{background:#fff;border:1px solid #ffd6d6}
+    .btn-danger.confirm{background:var(--danger);color:#fff;border-color:var(--danger)}
+
+
+    /* from v1 */
+
+    /* --- NEW UI: Color Palette & Core Variables --- */
+    :root {
+      --brand: #007bff; /* Softer blue for active elements */
+      --primary-green: #72BF44; /* Green for primary CTA */
+      --bg: #f0f5ff; /* Lighter page background */
+      --card: #ffffff;
+      --muted: #6c757d; /* Slightly softer muted text */
+      --danger: #dc3545;
+      --table-header-bg: #eaf2fd;
+      --table-header-text: #495057;
+      --icon-btn-border: #dee2e6;
+      --icon-btn-color: #007bff;
+
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      --radius: 12px; /* Softer radius */
+      --gap: 16px;
+      font-family: "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
+      --brand-active: #3b82f6; /* Blue for active tab */
+      --header-border: #e5e7eb; /* Light gray for borders */
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: #212529;
+    }
+
+    /* --- NEW UI: Updated Header --- */
+    header {
+      background: var(--card);
+      color: #111;
+      padding: 12px 24px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .brand { display:flex; gap: 12px; align-items:center; font-weight: 700; font-size: 1.5rem; }
+    .brand .logo-dot { color: #f54257; }
+
+    /* --- NEW UI: Updated Tabs --- */
+    .tabs {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .tabs li {
+  color: var(--muted);
+  cursor: pointer;
+  padding: 14px 4px; /* Adjust padding for underline */
+  border-bottom: 3px solid transparent;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  background-color: transparent; /* Ensure no background */
+}
+    .tabs li:hover {
+    color: var(--brand-active);
+}
+
+
+
+    .page {
+  max-width: 1360px;
+  margin: 32px auto 64px auto; /* Adds 64px of margin to the bottom */
+  padding: 0 24px;
+}
+
+    /* --- NEW UI: Main Card Style --- */
+    .card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px 24px 32px 24px; /* Increased bottom padding */
+  box-shadow: var(--shadow);
+  border: 1px solid #e9ecef;
+}
+
+    /* --- NEW UI: Appointments Header Layout --- */
+    .appointments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  /* REMOVE the border-bottom and padding-bottom properties */
+}
+    .appointments-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .search-input {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border-radius: 8px;
+      padding: 6px 10px; /* reduced vertical size */
+      border: 1px solid #ced4da;
+      box-sizing: border-box;
+      width: 240px; /* narrower */
+      border-color: #C9E6FF;
+}
+
+    .search-input:focus-within {
+      border-color: #86b7fe; /* A more subtle focus color */
+      box-shadow: none; /* Remove the glow */
+    }
+    .search-input input {
+      border: 0;
+      outline: 0;
+      background: transparent;
+      font-size: 0.8rem; /* slightly smaller text */
+      width: 100%;
+      padding:2px 0; /* reduce inner height */
+    }
+
+    /* --- NEW UI: Table Styles --- */
+    .table {
+      width: 100%;
+      margin-top: 14px;
+      border-collapse: collapse;
+    }
+
+    .table thead th {
+      text-align: left;
+      padding: 16px 14px;
+      color: var(--table-header-text);
+      background: var(--table-header-bg);
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .table thead th:first-child { border-top-left-radius: 8px; }
+    .table thead th:last-child { border-top-right-radius: 8px; }
+
+
+    .table tbody td {
+      padding: 16px 14px;
+      border-bottom: 1px solid #e9ecef;
+      vertical-align: middle;
+    }
+
+    /* --- NEW UI: Action Icon Buttons --- */
+    .row-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .action-icon-btn {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        border: 1px solid var(--icon-btn-border);
+        background: #fff;
+        cursor: pointer;
+        color: var(--icon-btn-color);
+        transition: background-color 0.2s, color 0.2s;
+    }
+    .action-icon-btn:hover {
+        background-color: #f0f5ff;
+        border-color: #b9c2cb;
+    }
+    .action-icon-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+    .action-icon-btn.notify-btn.active {
+      background: #fffbe6;
+      border-color: #ffe58f;
+      color: #faad14;
+    }
+    
+    /* Button Styles */
+    .btn {
+      background: #fff;
+      border: 1px solid #ced4da;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: none;
+      transition: background-color 0.2s;
+    }
+
+    /* --- NEW UI: Primary Green "Create" Button --- */
+    .btn.primary {
+      background: var(--primary-green);
+      color: #fff;
+      border: 1px solid var(--primary-green);
+      padding: 6px 36px; /* shorter height, wider button */
+      min-width:170px; /* ensure wider visual */
+    }
+    .btn.primary:hover {
+        background: #218838;
+    }
+
+    /* --- EXISTING PAGINATION: No changes made as per request --- */
+    .pagination {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:18px;
+    }
+    .pagination .left, .pagination .center, .pagination .right { display:flex; align-items:center; gap:12px; }
+    .select { padding:6px 8px; border-radius:6px; border:1px solid #e6eef9; background:#fff; }
+    .icon-btn { width:38px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:1px solid #e6eef9; background:#fff; cursor:pointer; }
+    .btn:disabled,
+    .btn[aria-disabled="true"],
+    .icon-btn:disabled,
+    .icon-btn[aria-disabled="true"] {
+      background:#e5e7eb; border-color:#d1d5db; color:#9ca3af; cursor:not-allowed;
+    }
+
+    /* --- (All other styles from original file) --- */
+    .report-table thead th{ background:#f3f7fd; border-bottom-color:#dbe8fb; }
+    .report-table{ border-radius:10px; overflow:hidden; }
+    .report-table tbody tr:nth-child(even){background:#fafcff}
+    .report-meta{display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px 0;font-size:0.85rem;color:var(--muted)}
+    .form-row { display:flex; gap:12px; align-items:center; margin-top:12px; }
+    .form-col { flex:1; min-width:0; }
+    label { display:block; font-weight:600; color:var(--muted); margin-bottom:6px; font-size:0.9rem; }
+    
+    input, select, textarea { width:100%; padding:10px;border-radius:8px;border:1px solid #e6eef9; background:#fbfdff; font-size:0.95rem; box-sizing:border-box }
+
+    input, select, textarea {
+  width: 100%;
+  padding: 12px; /* Increased padding */
+  border-radius: 8px;
+  border: 1px solid #cce0ff; /* Light blue border */
+  background: #f8fafc; /* Very light background */
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+    textarea { min-height:100px; resize:vertical; }
+    .hidden { display:none !important; }
+    .toast { position:fixed; top:20px; right:20px; background: #111; color:#fff; padding:12px 16px; border-radius:8px; box-shadow: 0 8px 26px rgba(0,0,0,0.22); z-index:1200; opacity:0; transform:translateY(-6px); transition: all .28s ease; }
+    .toast.show { opacity:1; transform:translateY(0); }
+    @media (max-width: 880px) { .search-input { min-width: 180px; } .form-row { flex-direction:column } }
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:2000}
+    .modal-backdrop.hidden{display:none}
+    .modal-dialog{background:#fff;border-radius:12px;box-shadow:var(--shadow);width:min(420px,92vw);padding:18px}
+    .modal-title{font-weight:700;margin:0 0 8px 0}
+    .modal-body{color:var(--muted);margin-bottom:16px}
+    .modal-actions{display:flex;justify-content:flex-end;gap:10px}
+    .btn-danger{background:#fff;border:1px solid #ffd6d6}
+    .btn-danger.confirm{background:var(--danger);color:#fff;border-color:var(--danger)}
+
+    .actions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Space between search and button */
+  min-width: 280px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+.grid-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+}
+.radio-group, .checkbox-group {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  padding-top: 8px;
+}
+.form-footer-text {
+  text-align: center;
+  margin-top: 32px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.form-footer-text a {
+  color: var(--brand-active);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+#cancelForm.btn {
+  background-color: #f1f5f9; /* Light gray background */
+  border-color: #e2e8f0;
+  color: var(--muted);
+}
+
+.form-header {
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e9ecef; /* Divider line */
+  font-weight: 700;
+}
+
+input[type="date"] {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #cce0ff;
+  background: #f8fafc;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+header {
+  background: #ffffff;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--header-border);
+}
+
+.tabs {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tabs li {
+  color: var(--muted);
+  cursor: pointer;
+  padding: 8px 4px;
+  /* border-bottom: 2px solid transparent; */
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+.tabs li:hover {
+  color: var(--brand-active);
+}
+
+.tabs li.active{
+      /* background: rgba(255,255,255,0.14); */
+      color: var(--brand-active);
+      background-color: transparent;     
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.embla-logo {
+    width: 110px;
+}
+
+
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 3000; /* ensure nav stays on top */
+}
+
+.toast {
+  top: 72px;              /* push below header (adjust if header height changes) */
+  right: 24px;
+  z-index: 1500;          /* lower than header */
+  pointer-events: none;   /* don’t block clicks on nav */
+}
+
+.toast.show {
+  pointer-events: none;   /* keep non-interactive */
+}
+
+  </style>
+
+  <!-- keep jsPDF if you need later -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+
+<body>
+  <!-- <header>
+    <div class="brand">
+      <div class="logo">CR</div>
+      <div>Clinic Reception Dashboard</div>
+    </div>
+
+    both work manually, need to check with voice
+
+    <ul class="tabs" role="tablist" aria-label="Main navigation">
+      <li class="active tab-btn" data-tab="appointments" voice.name="go to appointments" onclick="openTab('appointments')">Appointments</li>
+      <li class="tab-btn" data-tab="billing" voice.name="go to billing" onclick="openTab('billing')">Billing</li>
+      <li class="tab-btn" data-tab="research" voice.name="go to research" onclick="openTab('research')">Research</li>
+      <li class="tab-btn" data-tab="reports" voice.name="go to reports" onclick="openTab('reports')">Reports</li>
+      <li class="tab-btn" data-tab="help" voice.name="go to help" onclick="openTab('help')">Help</li>
+    </ul>
+
+  </header> -->
+
+      
+<header>
+  <!-- <div class="brand">embla</div> -->
+  <div class="logo">
+    <img src="embla-logo.png" alt="Embla Logo" class="embla-logo">
+  </div>
+
+  <!-- <img src="assets/images/logo.png" alt="Logo" class="rounded-circle" width="150" height="32"> -->
+
+  <ul class="tabs" role="tablist" aria-label="Main navigation">
+    <li class="active tab-btn" data-tab="appointments" voice.name="appointments" onclick="openTab('appointments')">Appointments</li>
+    <li class="tab-btn" data-tab="billing" voice.name="billing" onclick="openTab('billing')">Billing</li>
+    <li class="tab-btn" data-tab="research" voice.name="research" onclick="openTab('research')">Research</li>
+    <li class="tab-btn" data-tab="reports" voice.name="reports" onclick="openTab('reports')">Reports</li>
+    <li class="tab-btn" data-tab="help" voice.name="help" onclick="openTab('help')">Help</li>
+  </ul>
+
+  <!-- <ul class="tabs" role="tablist" aria-label="Main navigation">
+    <li class="active tab-btn" data-tab="appointments" voice.name="appointments" >Appointments</li>
+    <li class="tab-btn" data-tab="billing" voice.name="billing" >Billing</li>
+    <li class="tab-btn" data-tab="research" voice.name="research" >Research</li>
+    <li class="tab-btn" data-tab="reports" voice.name="reports" >Reports</li>
+    <li class="tab-btn" data-tab="help" voice.name="help" >Help</li>
+  </ul> -->
+</header>
+
+  <main class="page">
+    <!-- top-level container card -->
+    <div id="appointments-page" class="card" voice.name="appointments">
+
+      <!-- Appointments top header -->
+      <div class="appointments-header">
+        <div>
+          <h2 style="margin:0 0 6px 0;">List of Appointments</h2>
+        </div>
+
+        <div class="search-container">
+          <div class="search-input" title="Search appointments">
+            <!-- <svg width="16" height="16" viewBox="0 0 24 24" style="margin-right:8px;opacity:.6"><path fill="currentColor" d="M9.5 3A6.5 6.5 0 1 1 3 9.5 6.507 6.507 0 0 1 9.5 3m0-2A8.5 8.5 0 1 0 18 9.5 8.51 8.51 0 0 0 9.5 1z"/><path fill="currentColor" d="M21.71 20.29l-5.4-5.39"/></svg> -->
+            <input id="searchInput" placeholder="Search..." voice.name="search" />
+          </div>
+          
+          <button id="createBtnTop" class="btn primary" voice.name="new appointment">New Appointment</button>
+          <!-- <button id="createBtnTop" class="btn primary" voice.name="create appointment">New Appointment</button> -->
+        </div>
+      </div>
+      <div class="table-separator" style="height:2px;background:#e4edf5;margin:6px 0 4px 0;border-radius:2px"></div>
+
+      <!-- LIST view -->
+      <div id="appointmentsListView">
+        <table class="table" aria-label="Appointments table">
+          <thead>
+            <tr>
+              <th>Patient name</th>
+              <th>Appointment date & time</th>
+              <th>Doctor</th>
+              <th>Contact number</th>
+              <th>Gender</th>
+              <th>Assistance</th>
+              <th style="width:100px;text-align:center"></th>
+              <!-- <th style="width:150px;text-align:right"></th> -->
+            </tr>
+          </thead>
+          <tbody id="appointmentsTbody">
+            <!-- rows rendered by JS -->
+          </tbody>
+        </table>
+
+        <div class="pagination">
+          <div class="left">
+            <label style="font-weight:600;color:var(--muted)">Items per page:</label>
+            <select id="itemsPerPage" class="select" aria-label="Items per page" voice.name="items per page">
+              <option value="10" voice.name="10">10</option>
+              <option value="25" voice.name="25" selected>25</option>
+              <option value="50" voice.name="50">50</option>
+              <option value="100" voice.name="100">100</option>
+            </select>
+            <div id="rangeLabel" style="color:var(--muted)" aria-live="polite">0 of 0 items</div>
+          </div>
+
+          <div class="right" style="justify-content:flex-end;">
+            <button class="icon-btn" id="firstPageBtn" title="First" aria-label="First page" voice.name="first page">First</button>
+            <button class="icon-btn" id="prevPageBtn" title="Previous" aria-label="Previous page" voice.name="previous page">&lt;</button>
+            <div id="pageLabel" style="color:var(--muted)" aria-live="polite">1 of 1</div>           
+            <button class="icon-btn" id="nextPageBtn" title="Next" aria-label="Next page" voice.name="next page">&gt;</button>
+            <button class="icon-btn" id="lastPageBtn" title="Last" aria-label="Last page" voice.name="last page">Last</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- FORM view (hidden initially) -->
+      <!-- <div id="appointmentsFormView" class="hidden" style="margin-top:18px;">
+        <h2 id="formTitle">Patient Appointment</h2>
+
+        <form id="appointmentForm">
+          <input type="hidden" id="editRef" value="">
+          <div class="form-row">
+            <div class="form-col">
+              <label for="patientName">Patient Name</label>
+              <input id="patientName" name="patientName" required placeholder="Enter patient name" voice.name="patient name">
+            </div>
+            <div class="form-col">
+              <label for="contactNumber">Contact Number</label>
+              <input id="contactNumber" name="contactNumber" type="tel" placeholder="Enter contact number" voice.name="contact number">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label for="apptDate">Appointment Date</label>
+              <input id="apptDate" name="apptDate" type="date" voice.name="appointment date">
+            </div>
+            <div class="form-col">
+              <label for="apptTime">Appointment Time</label>
+              <input id="apptTime" name="apptTime" type="time" voice.name="appointment time">
+            </div>
+            <div class="form-col">
+              <label for="doctorSelect">Doctor</label>
+              <select id="doctorSelect" name="doctorSelect" voice.name="doctor list">
+                <option value="">-- Select Doctor --</option>
+                <option value="Dr. Rob" voice.name="dr. doctor rob">Dr. Rob</option>
+                <option value="Dr. Lee" voice.name="dr. doctor lee">Dr. Lee</option>
+                <option value="Dr. Ben" voice.name="dr. doctor ben">Dr. Ben</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label>Gender</label>
+              <div style="display:flex;gap:16px;align-items:center" voice.name="gender">
+                <label><input type="radio" name="gender" value="Male" voice.name="male" checked> Male</label>
+                <label><input type="radio" name="gender" value="Female" voice.name="female"> Female</label>
+              </div>
+            </div>
+
+            <div class="form-col">
+              <label>Assistance</label>
+              <div style="display:flex;gap:12px;align-items:center" voice.name="assistance">
+                <label><input type="checkbox" name="assistances" value="Wheelchair" voice.name="wheelchair"> Wheelchair</label>
+                <label><input type="checkbox" name="assistances" value="Disabled" voice.name="disabled"> Disabled</label>
+                <label><input type="checkbox" name="assistances" value="Allergy" voice.name="allergy"> Allergy</label>
+              </div>
+            </div>
+
+            <div class="form-col">
+              <label for="notes">Notes</label>
+              <input id="notes" name="notes" placeholder="Short notes (optional)" voice.name="notes">
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px;">
+            <button type="button" class="btn" id="cancelForm" voice.name="cancel appointment">Cancel</button>
+            <button type="submit" class="btn primary" id="submitFormBtn" voice.name="create update appointment">Create Appointment</button>
+            <button type="submit" class="btn primary" id="submitFormBtn" voice.name="create appointment">Create Appointment</button>
+          </div>
+        </form>
+      </div> -->
+
+
+      <div id="appointmentsFormView" class="hidden">
+  <h2 id="formTitle">Create Appointment</h2>
+  
+  <form id="appointmentForm">
+    <input type="hidden" id="editRef" value="">
+    
+    <!-- NEW Two-Column Grid -->
+    <div class="form-grid">
+      <!-- Left Column -->
+      <div class="grid-col">
+        <div class="form-field">
+          <label for="patientName">Patient Name</label>
+          <input id="patientName" name="patientName" voice.name="patient name" required placeholder="Enter patient name">
+        </div>
+
+        <div class="form-field">
+          <label for="apptDate">Appointment Date</label>
+          <input id="apptDate" name="apptDate" type="date" voice.name="appointment date" placeholder="Chose date">
+        </div>
+
+        <div class="form-field">
+          <label for="doctorSelect">Doctor</label>
+          <select id="doctorSelect" name="doctorSelect" voice.name="doctor list">
+            <option value="">Select doctor</option>
+            <option value="Doctor Rob" voice.name="doctor rob">Doctor Rob</option>
+            <option value="Doctor Lee" voice.name="doctor lee">Doctor Lee</option>
+            <option value="Doctor Ben" voice.name="doctor ben">Doctor Ben</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Gender</label>
+          <div class="radio-group" voice.name="gender">
+            <label><input type="radio" name="gender" voice.name="male" value="Male" checked> Male</label>
+            <label><input type="radio" name="gender" voice.name="female" value="Female"> Female</label>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column -->
+      <div class="grid-col">
+        <div class="form-field">
+          <label for="contactNumber">Contact Number</label>
+          <input id="contactNumber" name="contactNumber" type="tel" voice.name="contact number" placeholder="Enter contact number">
+        </div>
+        <div class="form-field">
+          <label for="apptTime">Appointment Time</label>
+          <input id="apptTime" name="apptTime" type="time" voice.name="appointment time" placeholder="Chose time">
+        </div>
+        <div class="form-field">
+          <label for="notes">Note</label>
+          <input id="notes" name="notes" voice.name="notes" placeholder="Notes optional">
+        </div>
+        <div class="form-field">
+          <label>Assistance</label>
+          <div class="checkbox-group" voice.name="assistance">
+            <label><input type="checkbox" name="assistances" voice.name="wheelchair" value="Wheelchair"> Wheelchair</label>
+            <label><input type="checkbox" name="assistances" voice.name="disabled" value="Disabled"> Disabled</label>
+            <label><input type="checkbox" name="assistances" voice.name="allergy" value="Allergy"> Allergy</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn" voice.name="cancel appointment" id="cancelForm">Cancel</button>
+      <button type="submit" class="btn primary" voice.name="create update appointment" id="submitFormBtn">Create Appointment</button>
+      <button type="submit" class="btn primary" id="submitFormBtn" voice.name="create appointment">Create Appointment</button>
+    </div>
+  </form>
+
+</div>
+
+
+    </div>
+
+    
+
+
+    <!-- other tabs content (placeholders) -->
+    <div id="billing-page" class="card hidden" style="margin-top:18px;">
+      <form class="billing-form" voice.name="Billing">
+            <div id="billing" class="form-section">
+                <h2>Billing & Payments</h2>
+
+                <!-- Patient Details -->
+                <h3>Patient Information</h3>
+                <label for="patientId">Patient ID:</label>
+                <input type="text" id="patientId" name="patientId" placeholder="Enter patient ID" required>
+
+                <label for="patientName">Patient Name:</label>
+                <input type="text" id="patientName" name="patientName" placeholder="Enter patient name" required>
+
+                <!-- Doctor & Service -->
+                <h3>Doctor & Service</h3>
+                <label for="doctorName">Doctor Name:</label>
+                <input type="text" id="doctorName" name="doctorName" placeholder="Enter doctor name" required>
+
+                <label for="serviceType">Service Type:</label>
+                <select id="serviceType" name="serviceType" required>
+                    <option value="">Select service</option>
+                    <option value="consultation">Consultation</option>
+                    <option value="lab-test">Lab Test</option>
+                    <option value="surgery">Surgery</option>
+                    <option value="follow-up">Follow-Up</option>
+                </select>
+
+                <!-- Payment Info -->
+                <h3>Payment Details</h3>
+                <label for="invoiceNumber">Invoice Number:</label>
+                <input type="text" id="invoiceNumber" name="invoiceNumber" placeholder="Enter invoice number">
+
+                <label for="amount">Amount (Rs):</label>
+                <input type="number" id="amount" name="amount" step="0.01" placeholder="Enter amount" required>
+
+                <label for="paymentMode">Payment Mode:</label>
+                <select id="paymentMode" name="paymentMode" required>
+                    <option value="">Select mode</option>
+                    <option value="cash">Cash</option>
+                    <option value="card">Card</option>
+                    <option value="bank-transfer">Bank Transfer</option>
+                    <option value="insurance">Insurance</option>
+                </select>
+
+                <label for="paymentDate">Payment Date:</label>
+                <input type="date" id="paymentDate" name="paymentDate" required>
+
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px;">
+          <button class="btn primary" voice.name="submit billing">Submit Billing</button>
+        </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="research-page" class="card hidden" style="margin-top:18px;">
+      <form class="research-form" voice.name="Research">
+            <div id="research" class="form-section">
+                <h2>Research Data Collection</h2>
+
+                <!-- Study Info -->
+                <h3>Study Details</h3>
+                <label for="studyId">Study ID:</label>
+                <input type="text" id="studyId" name="studyId" placeholder="Enter study ID" required>
+
+                <label for="studyTitle">Study Title:</label>
+                <input type="text" id="studyTitle" name="studyTitle" placeholder="Enter study title" required>
+
+                <label for="principalInvestigator">Principal Investigator:</label>
+                <input type="text" id="principalInvestigator" name="principalInvestigator" placeholder="Enter investigator name" required>
+
+                <!-- Data Collection -->
+                <h3>Patient Data (for study)</h3>
+                <label for="participantId">Participant ID:</label>
+                <input type="text" id="participantId" name="participantId" placeholder="Enter participant ID" required>
+
+                <label for="age">Age:</label>
+                <input type="number" id="age" name="age" min="0" max="120" required>
+
+                <label for="condition">Medical Condition:</label>
+                <input type="text" id="condition" name="condition" placeholder="Enter condition being studied">
+
+                <label for="treatment">Treatment/Intervention:</label>
+                <input type="text" id="treatment" name="treatment" placeholder="Enter treatment/intervention">
+
+                <!-- Notes -->
+                <h3>Research Notes</h3>
+                <label for="notes">Observations / Remarks:</label>
+                <textarea id="notes" name="notes" rows="4" placeholder="Enter observations or notes"></textarea>
+
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px;">
+          <button class="btn primary" voice.name="save research data">Save Research Data</button>
+        </div> 
+            </div>
+        </form>
+    </div>
+
+
+
+
+    <!-- <div id="reports-page" class="card hidden" style="margin-top:18px;">
+      <h2 style="margin-top:0">Reports &amp; Records</h2>
+
+      <form id="reportsForm" aria-label="Reports filter form" voice.name="Reports">
+        <div class="form-row">
+          <div class="form-col">
+            <label>Report Type</label>
+            <div style="display:flex;gap:20px;align-items:center" voice.name="report type">
+              <label><input type="radio" name="reportType" value="patients" voice.name="patients" checked> Patients</label>
+              <label><input type="radio" name="reportType" value="Lab" voice.name="lab"> Lab</label>
+              <label><input type="radio" name="reportType" value="Payments" voice.name="payments"> Payments</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:16px;">
+          <div class="form-col">
+            <label>Doctor</label>
+            <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:center" voice.name="doctors checkbox">
+              <label><input type="checkbox" name="reportDoctor" value="Dr. Rob" voice.name="rob"> Dr. Rob</label>
+              <label><input type="checkbox" name="reportDoctor" value="Dr. Lee" voice.name="lee"> Dr. Lee</label>
+              <label><input type="checkbox" name="reportDoctor" value="Dr. Ben" voice.name="ben"> Dr. Ben</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:16px;">
+          <div class="form-col">
+            <label for="reportStart">Start Date</label>
+            <input id="reportStart" type="date" voice.name="start date">
+          </div>
+          <div class="form-col">
+            <label for="reportEnd">End Date</label>
+            <input id="reportEnd" type="date" voice.name="end date">
+          </div>
+
+          <div class="form-col" style="display:flex;align-items:flex-end;justify-content:flex-end">
+            <button type="button" class="btn primary" id="generateReportBtn" voice.name="generate report">Generate Report</button>
+          </div>
+
+        </div>
+      </form>
+
+
+      <div id="reportTableWrapper" class="table-wrapper hidden" aria-live="polite" style="margin-top:14px;">
+        <div id="reportMeta" class="report-meta hidden" aria-live="polite"></div>
+        <table class="table report-table" aria-label="Report results">
+          <thead id="reportThead"></thead>
+          <tbody id="reportTbody">
+          </tbody>
+        </table>
+
+        <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:12px;" id="reportActions" class="hidden">
+          <button type="button" class="btn primary" id="downloadReportBtn" voice.name="download report">Download Report</button>
+        </div>
+
+      </div>
+    </div> -->
+
+        
+<div id="reports-page" class="card hidden">
+  <h2 class="form-header">Reports & Records</h2>
+  
+  <form id="reportsForm" aria-label="Reports filter form" voice.name="reports">
+    
+    <!-- NEW Two-Column Grid -->
+    <div class="form-grid">
+      <!-- Left Column -->
+      <div class="grid-col">
+        <div class="form-field">
+          <label for="reportStart">Start Date</label>
+          <input id="reportStart" type="date" voice.name="start date" placeholder="Chose date">
+        </div>
+        <div class="form-field">
+          <label>Report Type</label>
+          <div class="radio-group" voice.name="report type">
+            <label><input type="radio" name="reportType" value="patients" voice.name="patients" checked> Patients</label>
+            <label><input type="radio" name="reportType" value="Lab" voice.name="lab"> Lab</label>
+            <label><input type="radio" name="reportType" value="Payments" voice.name="payments"> Payments</label>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column -->
+      <div class="grid-col">
+        <div class="form-field">
+          <label for="reportEnd">End Date</label>
+          <input id="reportEnd" type="date" voice.name="end date" placeholder="Chose date">
+        </div>
+        <div class="form-field">
+          <label>Doctor</label>
+          <div class="checkbox-group" voice.name="doctors checkbox">
+          <!-- <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:center" voice.name="doctors checkbox"> -->
+            <label><input type="checkbox" name="reportDoctor" value="Doctor Rob" voice.name="rob"> Rob</label>
+            <label><input type="checkbox" name="reportDoctor" value="Doctor Lee" voice.name="lee"> Lee</label>
+            <label><input type="checkbox" name="reportDoctor" value="Doctor Ben" voice.name="ben"> Ben</label>
+            <!-- <label><input type="checkbox" name="reportDoctor" voice.name="rob"> Doctor Rob</label>
+              <label><input type="checkbox" name="reportDoctor" voice.name="lee"> Doctor Lee</label>
+              <label><input type="checkbox" name="reportDoctor" voice.name="ben"> Doctor Ben</label> -->
+          </div>
+
+        </div>
+      </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn primary" id="generateReportBtn" voice.name="generate report">Generate Report</button>
+    </div>
+  </form>
+
+  <div id="reportTableWrapper" class="table-wrapper hidden" aria-live="polite" style="margin-top:14px;">
+        <div id="reportMeta" class="report-meta hidden" aria-live="polite"></div>
+        <table class="table report-table" aria-label="Report results">
+          <thead id="reportThead"></thead>
+          <tbody id="reportTbody">
+          </tbody>
+        </table>
+
+        <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:12px;" id="reportActions" class="hidden">
+          <button type="button" class="btn primary" id="downloadReportBtn" voice.name="download report">Download Report</button>
+        </div>
+      </div>
+
+</div>
+
+  
+
+
+
+    
+    <div id="help-page" class="card hidden" style="margin-top:18px;">
+      <form class="help-form" voice.name="Help Form">
+            <div id="help" class="form-section">
+                <h2>Help & Support</h2>
+                <p class="intro">
+                Welcome to the Medical Management System Help Center.  
+                Here you can find answers to common questions, submit a support request, 
+                or get guidance on how to use different modules like Billing, Patients, and Research.
+                </p>
+
+                <!-- 🩺 Help Topics -->
+                <h3>Common Topics</h3>
+                <ul>
+                    <li><strong>Patient Management:</strong> How to register, update, or view patient records.</li>
+                    <li><strong>Billing:</strong> How to generate invoices, record payments, and view transaction reports.</li>
+                    <li><strong>Doctor Portal:</strong> Viewing appointments, accessing lab reports, and entering diagnoses.</li>
+                    <li><strong>Research Module:</strong> Recording participant data and exporting study reports.</li>
+                    <li><strong>System Access:</strong> Resetting passwords and managing user accounts.</li>
+                </ul>
+
+                <!-- 📄 Documentation -->
+                <h3>Quick Guides</h3>
+                <p>You can download step-by-step user manuals below:</p>
+                <ul>
+                    <li><a href="#">📘 User Manual (PDF)</a></li>
+                    <li><a href="#">📗 Research Data Entry Guide</a></li>
+                    <li><a href="#">📙 Billing & Payments Guide</a></li>
+                </ul>
+
+                <!-- 📧 Support Request -->
+                <h3>Contact Support</h3>
+
+                <label for="name">Your Name:</label>
+                <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+
+                <label for="email">Email Address:</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+
+                <label for="issueType">Issue Type:</label>
+                <select id="issueType" name="issueType" required>
+                    <option value="">Select a category</option>
+                    <option value="technical">Technical Issue</option>
+                    <option value="billing">Billing Query</option>
+                    <option value="account">Account Access</option>
+                    <option value="research">Research Data Issue</option>
+                    <option value="other">Other</option>
+                </select>
+
+                <label for="message">Describe Your Issue:</label>
+                <textarea id="message" name="message" rows="4" placeholder="Provide details about your issue..." required></textarea>
+
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px;">
+          <button class="btn primary" voice.name="submit request">Submit Request</button>
+        </div>
+
+                <!-- ℹ️ Extra Help -->
+                <h3>Additional Resources</h3>
+                <p>
+                    💬 Need instant help? Contact our support team:
+                </p>
+                <ul>
+                    <li><strong>Email:</strong> <a href="mailto:support@medsys.com">support@medsys.com</a></li>
+                    <li><strong>Phone:</strong> +94 71 234 5678</li>
+                    <li><strong>Live Chat:</strong> Available weekdays 9:00 AM – 5:00 PM</li>
+                </ul>
+            </div>
+        </form>
+    </div>
+
+  </main>
+
+
+
+
+
+
+
+
+  <!-- toast area -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Optional VoiceKom speech container -->
+  <!-- <div id="speech-container" aria-live="polite" class="hidden"></div> -->
+
+  <!-- load main script -->
+  
+  <!-- Delete confirmation modal -->
+  <div id="deleteModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" aria-describedby="deleteModalDesc">
+    <div class="modal-dialog">
+      <h3 id="deleteModalTitle" class="modal-title">Delete appointment?</h3>
+      <!-- <div id="deleteModalDesc" class="modal-body">
+        Are you sure you want to delete appointment <span id="deleteModalMessage" style="font-weight:600"></span>? This action cannot be undone.
+      </div> -->
+      <div id="deleteModalDesc" class="modal-body">
+        Are you sure you want to delete appointment for <span id="deleteModalMessage" style="font-weight:600"></span>? This action cannot be undone.
+      </div>
+      <div class="modal-actions">
+        <button id="cancelDeleteBtn" type="button" class="btn" voice.name="discard">Discard</button>
+        <button id="confirmDeleteBtn" type="button" class="btn btn-danger confirm" voice.name="delete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+        // function openTab(tabId) {
+        //     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        //     document.querySelectorAll('.form-section').forEach(sec => sec.classList.remove('active'));
+        //     document.getElementById(tabId).classList.add('active');
+        //     event.target.classList.add('active');
+        // }
+
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+            document.querySelectorAll('.page > div, .page > form').forEach(page => page.classList.add('hidden'));
+            document.getElementById(`${tabId}-page`).classList.remove('hidden');
+        }
+  </script>
+  <script src="../../dist/voicekom.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>

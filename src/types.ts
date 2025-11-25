@@ -51,6 +51,12 @@ export interface CoreConfig {
   actuatorConfig: ActuatorConfig
   wakeWords?: string[]; // Optional wake word for start listening
   sleepWords?: string[]; // Optional wake word for stop listening
+  lang: string; // Wakeword for language selection
+}
+
+export interface LanguageConfig {
+  wake: string[];
+  sleep: string[];
 }
 
 export interface UIConfig {
@@ -89,6 +95,12 @@ export enum IntentTypes {
   FILL_FORM = 'fill_form',
   SUBMIT_FORM = 'submit_form',
   UNKNOWN = 'UNKNOWN',
+
+  // Added by me to create additional functionality
+  ZOOM = 'zoom',
+  UNDO = 'undo',
+  UNDO_TARGET = 'undo_target',
+  SEARCH_ELEMENT = 'search_element',
 }
 
 // Audio Capturer interface

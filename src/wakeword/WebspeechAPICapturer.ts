@@ -1,10 +1,12 @@
 import Fuse , { IFuseOptions } from 'fuse.js'; // NEW: Import Fuse.js
 import { EventBus, SpeechEvents } from '../common/eventbus';
 import { WakewordDetector } from '../types';
+import { LANGUAGE_CONFIGS } from './language-config';
 
 export class WebspeechWakewordDetector implements WakewordDetector {
   private readonly recognition: SpeechRecognition;
   private isListening = false;
+  private hasShownError = false;
   
   // These will be initialized later
   private wakeWords: string[] = ['hey'];
@@ -35,23 +37,38 @@ export class WebspeechWakewordDetector implements WakewordDetector {
     this.recognition.interimResults = true;
     this.recognition.lang = 'en-US';
 
+    this.hasShownError = false; //Added by me to handle offline messages
+
     this.setupListeners();
   }
 
   /**
    * MODIFIED: Initializes Fuse.js instances with the provided words.
    */
-  public init(wakeWords: string[], sleepWords?: string[]): void {
-    console.log(`Initializing WakeWordDetector with wake words: ${wakeWords.join(', ')}`);
-    if (!wakeWords || wakeWords.length === 0) {
+  public init(lang: string, wakeWords: string[], sleepWords?: string[]): void {
+    if (wakeWords && wakeWords.length > 0) {
+      console.log(`Initializing WakeWordDetector with user provided wake words: ${wakeWords.join(', ')}`);
+      this.wakeWords = wakeWords;
+      this.sleepWords = sleepWords || [];
+    }
+    else {
+      // Look up the language in LANGUAGE_CONFIGS if wakeWords not explicitly passed
+      const langConfig = LANGUAGE_CONFIGS[lang];
+      if (!langConfig) {
+        throw new Error(`No language config found for '${lang}'. Please add it to LANGUAGE_CONFIGS.`);
+      }
+      console.log(`Initializing WakeWordDetector with default language specific wake words: ${langConfig.wake.join(', ')}`);
+      this.wakeWords = langConfig.wake;
+      this.sleepWords = langConfig.sleep;
+    }
+
+    console.log(`Initializing WakeWordDetector with wake words: ${this.wakeWords.join(', ')}`);
+    if (!this.wakeWords || this.wakeWords.length === 0) {
       throw new Error("A wake word must be provided for the WakeWordDetector.");
     }
 
-    this.wakeWords = wakeWords; // Store the original words
-    if (sleepWords) {
-      this.sleepWords = sleepWords;
-    }
-    
+    this.recognition.lang = lang;
+
     // Create a Fuse instance for wake words.
     // We pass the words directly. Fuse.js handles normalization.
     this.fuseWake = new Fuse(this.wakeWords, this.fuseOptions);
@@ -99,16 +116,16 @@ export class WebspeechWakewordDetector implements WakewordDetector {
         return;
       }
       
-      // We will now use a regular expression to find a whole word match.
+      // Modified expression to find a whole word match - supports multilingual characters
       const detectedWakeWord = this.wakeWords.find(wakeWord => {
-        // Create a regular expression to match the wake word as a whole word.
-        // \b is a word boundary.
-        // The 'i' flag makes the search case-insensitive.
-        const wakeWordRegex = new RegExp(`\\b${wakeWord}\\b`, 'i');
-        
-        // Test the regex against the transcription.
-        return wakeWordRegex.test(originalTranscription);
+        const escapedWord = wakeWord
+          .normalize('NFC') // normalize Unicode combining marks
+          .replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // escape regex symbols
+
+        const wakeWordRegex = new RegExp(`(^|[^\\p{L}\\p{N}])${escapedWord}([^\\p{L}\\p{N}]|$)`, 'iu');
+        return wakeWordRegex.test(originalTranscription.normalize('NFC'));
       });
+
 
       if (detectedWakeWord) {
         // The log message is now much more reliable!
@@ -119,14 +136,19 @@ export class WebspeechWakewordDetector implements WakewordDetector {
 
     this.recognition.onend = () => {
       if (this.isListening) {
-        console.warn("WakeWordDetector: Service ended unexpectedly, restarting...");
+        if (!this.hasShownError) {
+          console.warn("WakeWordDetector: Service ended unexpectedly, restarting...");
+          this.hasShownError=true;
+        }
         this.recognition.start();
       }
     };
 
     this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       if (event.error !== 'no-speech' && event.error !== 'audio-capture') {
-        console.error("WakeWordDetector Error:", event.error);
+        if (!this.hasShownError) {
+          console.error("WakeWordDetector Error:", event.error);
+        }
       }
     };
   }
@@ -137,6 +159,7 @@ export class WebspeechWakewordDetector implements WakewordDetector {
     }
     try {
       this.isListening = true;
+      this.hasShownError = false;
       this.recognition.start();
       console.log(`WakeWordDetector: Passively listening for "${this.wakeWords.join(", ")}"...`);
     } catch (e) {
@@ -150,6 +173,7 @@ export class WebspeechWakewordDetector implements WakewordDetector {
       return;
     }
     this.isListening = false;
+    this.hasShownError = false;
     this.recognition.stop();
     console.log("WakeWordDetector: Stopped.");
   }

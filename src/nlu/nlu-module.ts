@@ -47,6 +47,13 @@ export class NLUModule {
         this.startSingleListeningCycle();
       }
     });
+    this.eventBus.on(SpeechEvents.TRANSCRIPTION_UPDATED, (text: string) => {
+      // Use the updated text to run intent recognition
+      // if (this.isSessionActive) {
+      //   this.processTranscription(text);
+      // }
+      this.processTranscription(text)
+    });
   }
 
 
@@ -259,4 +266,12 @@ export class NLUModule {
         this.eventBus.emit(SpeechEvents.ERROR_OCCURRED, userMessage);
     }
 
+  // Inside NLUModule
+  public get sessionActive(): boolean {
+      return this.isSessionActive;
+  }
+
+  public get thisSession() {
+    return this.startSingleListeningCycle;
+  }
 }

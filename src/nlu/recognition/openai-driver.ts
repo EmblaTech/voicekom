@@ -253,6 +253,7 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
     }
 
     private normalizeResults(results: any): IntentResult[] {
+        console.log('******Normalized results:*******', results);
         if (!Array.isArray(results)) {
             if (results?.intent) {
                 return [this.createIntentResult(results)];
@@ -298,6 +299,7 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
         `;
         });
 
+        const today = new Date().toISOString().split('T')[0];
         systemPrompt += `
 
         ### Guiding Principle: The Rule of Maximum Specificity ###
@@ -329,7 +331,7 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
         -   **Incorrect Reasoning:** The word "submit" is almost always a button, so the intent must be \`click_element\`. **THIS IS WRONG.**
         -   **Correct Reasoning:** The primary action is "go to". This phrase strongly implies navigation or scrolling. The target of the navigation is "submit". Therefore, the correct intent is \`scroll_to_element\`.
 
-        -   **Your Rule:** When an action verb (like "go to", "scroll to") is present, it defines the intent. The noun that follows is simply the target of that action.
+        -   **Your Rule:** When an action verb (like "go to", "scroll to") is present, it defines the intent. The noun that follows is simply the target of that action. Also for action like "go to next page" or "go to previous page", the intent should reflect navigation between pages, so the correct intent must be \`click_element\`.
 
         ### IMPORTANT: Multiple Intent Detection ###
         A single user command can contain MULTIPLE intents. For example:
@@ -377,7 +379,7 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
             - Direction: "up", "down", "left", "right", "next", "previous" (normalize to English)
             - Position: "top", "bottom"(normalize to English)
             - Time:  "now", "3pm", "15:30" (normalize to English)
-            - Date: "today", "tomorrow", "2024-01-15" (normalize to English and standard format)
+            - Date: "today", "tomorrow", "2025-01-15" (normalize to English and standard format. If only day and month is given, then assume current year from ${today}.)
             - Number: "10", "3.14" (normalize to digit format)
             - Currency: "100 dollars", "50 euros" (normalize to English currency format)
             - Percentage: "20 percent" (normalize to English percentage format)
@@ -433,6 +435,23 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
         }
         ]
 
+        ### IMPORTANT: Retaining context for multiple intents ###
+        When multiple intents appear in one command, carry forward relevant context instead of treating them as separate, unrelated actions.
+
+        **Your Rule:** Later intents should inherit context (like a target or UI element) from earlier parts of the same command when clearly implied.
+
+        Examples:
+        - User says: “Open doctor list and select Doctor Lee.” → The system must understand that “select Doctor Lee” happens within the opened doctor list dropdown, not globally.
+
+        ## IMPORTANT: Interpreting non-specific dates
+        Convert natural-language, non-specific date expressions (e.g., "last week", "yesterday", "last month", "set start date to last month") into precise, machine-readable date values or date ranges. If only day and month are provided assume the current year from ${today}.
+
+        **Your Rules:**
+        - Use the ${today} as the baseline for all relative calculations.
+        - For ambiguous relative expressions, prefer calendar boundaries (week/month) rather than fixed-day offsets. Do NOT treat "last week" as "7 days ago" or "last month" as "30 days ago".
+        - Week definitions: The first day of the week
+        - Month definitions: Use calendar months (start = first day of the month, end = last day of that month).
+
         ### IMPORTANT: Interpreting Spelling and Formatting Corrections ###
         The input you receive is a raw Speech-to-Text transcript. The user may see a transcription error on their screen and try to correct it by giving spelling or formatting instructions. Your first job is to correctly interpret these instructions to reconstruct the user's true intended text.
 
@@ -461,49 +480,6 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
 
         ### Final Instruction ###
         Analyze the user's command carefully, identify ALL intents present in the command, apply these rules, and return ONLY the raw JSON array. Do not include any markdown formatting like \`\`\`json or explanations.`;
-
-        systemPrompt += `
-        ### IMPORTANT: Handling Exclusions and Negative Constraints ###
-        Often, a user will ask to perform an action on a group of items while excluding one or more specific items. Your task is to break this down into a sequence of simpler, atomic intents.
-
-        **Your Rule:** When you detect a command to act on a group with an "except" clause (or similar phrasing like "but not" or "besides"), you MUST generate two or more intents:
-        1.  The primary group action intent (e.g., \`CHECK_ALL\`).
-        2.  A subsequent, opposite action intent for each excluded item (e.g., \`UNCHECK_CHECKBOX\`).
-
-        **Example of Applying this Rule:**
-        -   **User Command:** "check all inquiry types except billing"
-        -   **Your Analysis:**
-            1.  The primary command is "check all inquiry types". This maps directly to the \`CHECK_ALL\` intent with a \`targetGroup\` of "inquiry types".
-            2.  The clause "except billing" is a negative constraint. It means after checking all, the "billing" item should be unchecked. This maps to the \`UNCHECK_CHECKBOX\` intent with a \`target\` of "billing".
-        -   **Your Conclusion:** You must return a JSON array containing both of these intents to fully capture the user's request.
-
-        -   **Incorrect Output (Loses Information):**
-            [{"intent": "CHECK_ALL", "confidence": 0.9, "entities": {"targetGroup": {"english": "inquiry types", "user_language": "..."}}}] // WRONG - The exclusion of "billing" is ignored.
-
-        -   **Correct Output (Breaks Down the Complex Command):**
-            [
-              {
-                "intent": "CHECK_ALL",
-                "confidence": 0.95,
-                "entities": {
-                  "targetGroup": {
-                    "english": "inquiry types",
-                    "user_language": "inquiry types"
-                  }
-                }
-              },
-              {
-                "intent": "UNCHECK_CHECKBOX",
-                "confidence": 0.95,
-                "entities": {
-                  "target": {
-                    "english": "billing",
-                    "user_language": "billing"
-                  }
-                }
-              }
-            ]
-        `;
 
         return systemPrompt;
     }
@@ -627,7 +603,16 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
         return {
             [IntentTypes.CLICK_ELEMENT]: {
                 // description:"Clicking an element directly. Button can be a simple action(Ex: send, edit, cancel transaction etc:)",
-                utterances: ["click (target)", "press (target)", "tap (target)"],
+                utterances: [
+                    "click (target)",
+                    "press (target)", 
+                    "tap (target)",
+                    "edit (target)",
+                    "delete (target)",
+                    "cancel (target)",
+                    "create (target)",
+                    "download (target)"
+                ],
                 negative_utterances: ["go to (target)"],
                 entities: ["target"]
             },
@@ -638,7 +623,8 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
                     "Fill (target) as (value)",
                     "Enter (target) as (value)",
                     "Enter (target) with (value)",
-                    "Fill (target) with (value)"
+                    "Fill (target) with (value)",
+                    "Search (target)"
                 ],
                 negative_utterances: ["edit (target)"],
                 entities: ["target", "value"]
@@ -694,15 +680,18 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
                 // description:"Uncheck all check boxes under a group.",
                 utterances: [
                     "uncheck all (targetGroup)",
-                    "deselect all (targetGroup)"
+                    "deselect all (targetGroup)",
+                    "uncheck (target) in (group)",
+                    "deselect (target) in (group)"
                 ],
                 negative_utterances: [],
-                entities: ["targetGroup"]
+                entities: ["targetGroup", "target", "group"]
             },
 
             [IntentTypes.SELECT_RADIO_OR_DROPDOWN]: {
                 // description:"Select a certain option from a dropdown or a radiobutton",
                 utterances: [
+                    //"select (group) in (target)",
                     "select (target) in (group)",
                     "choose (target) in (group)",
                     "pick (target) in (group)",
@@ -728,10 +717,59 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
             [IntentTypes.GO_BACK]: {                
                 // description:"Go back to previous page",
                 utterances: [
-                    "Go Back",
+                    "Go Back"
                 ],
                 negative_utterances: [],
                 entities: []
+            },
+
+            [IntentTypes.ZOOM]: {
+                // description:"Zoom in to/out of the current area of the page",
+                utterances: [
+                    "Zoom (direction)",
+                    "Go (direction)"
+                ],
+                negative_utterances: [],
+                entities: ["direction"]
+            },
+
+            [IntentTypes.UNDO]: {
+                // description:"Undo the previous action carried out by the system"
+                utterances: [
+                    "Undo action",
+                    "Erase",
+                    "Remove",
+                ],
+                negative_utterances: [],
+                entities: []
+            },
+
+            [IntentTypes.UNDO_TARGET]: {
+                // description:"Undo the previous action carried out by the system"
+                utterances: [
+                    "Undo (target)",
+                    "Erase (target)",
+                    "Remove (target)",
+                    "Undo (target) in (group)",
+                    "Erase (target) in (group)",
+                    "Remove (target) in (group)"
+                ],
+                negative_utterances: [],
+                entities: ["target", "group"]
+            },
+
+            [IntentTypes.SEARCH_ELEMENT]: {
+                // description:"search for a target in the search bar"
+                utterances: [
+                    "(target) by (value)",
+                    "Search by (value)",
+                    "Filter by (value)",
+                    "(target) for appointments with (value)",
+                    "(target) all appointments with (value)",
+                    "(target) all appointments for (value)"
+                ],
+                negative_utterances: [],
+                entities: ["target", "value"]
             },
 
             [IntentTypes.CLICK_ELEMENT_IN_CONTEXT]: {
@@ -739,7 +777,7 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
             utterances: [
                 "(target) for (contextKey) (contextValue)",
                 "(target) the (contextKey) (contextValue)",
-                "Click the (target) for the (contextValue) (contextKey)",
+                "Click the (target) for the (contextValue) (contextKey)"
             ],
             negative_utterances: [],
             entities: ["target", "contextKey", "contextValue"],

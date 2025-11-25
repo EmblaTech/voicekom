@@ -48,13 +48,56 @@ export class WhisperTranscriptionDriver implements TranscriptionDriver {
             }
 
             const data = await response.json();
-            const transcription = data.text;
+            // const transcription = data.text;
             
+            // if (typeof transcription !== 'string') {
+            //     throw new Error('Invalid transcription format in API response.');
+            // }
+
+            // this.logger.info(`Transcription successful: ${transcription}`);
+            // return transcription;
+
+            let transcription = (data.text || "").trim().toLowerCase();
+
             if (typeof transcription !== 'string') {
-                throw new Error('Invalid transcription format in API response.');
+            throw new Error('Invalid transcription format in API response.');
             }
 
-            this.logger.info(`Transcription successful: ${transcription}`);
+            // 🔥 1. Common Whisper hallucinations when noise is present
+            const noiseHallucinations = [
+                "thank you",
+                "thanks",
+                "thanks for watching",
+                "bye",
+                "bye bye",
+                "bye-bye",
+                "you",
+                "ok",
+                "okay",
+                "alright",
+                "thankyou"
+            ];
+
+            // 2. If the transcription is VERY short and exactly matches a hallucination → reject
+            const isShortHallucination =
+                transcription.split(" ").length <= 3 &&
+                noiseHallucinations.includes(transcription);
+
+            if (isShortHallucination) {
+                this.logger.info(`Rejected hallucinated noise transcription: '${transcription}'`);
+                return "";
+            }
+
+            // 3. If the entire text contains only a hallucination phrase → reject
+            if (noiseHallucinations.some(h => transcription.includes(h)) &&
+                transcription.length < 30 // prevents rejecting valid long sentences
+            ) {
+                this.logger.info(`Rejected likely noise-based hallucination: '${transcription}'`);
+                return "";
+            }
+
+            this.logger.info(`Transcription accepted: ${transcription}`);
+
             return transcription;
         } catch (error) {
             this.logger.error('Error during Whisper transcription:', error);

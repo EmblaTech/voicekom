@@ -635,6 +635,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
+    // --- Billing Form ---
+    // const billingForm = document.getElementById('billingForm');
+    // billingForm && billingForm.addEventListener('submit', (e) => {
+    //   e.preventDefault();
+    //   const patientId = document.getElementById('billing-patient-id')?.value;
+    //   if (!patientId) {
+    //     showToast("Patient ID is required.", true);
+    //     return;
+    //   }
+    //   showToast('Billing record submitted successfully.');
+    //   billingForm.reset();
+    // });
+
+    // const researchForm = document.getElementById('researchForm');
+    // researchForm && researchForm.addEventListener('submit', (e) => {
+    //   e.preventDefault();
+    //   const studyTitle = document.getElementById('study-title')?.value;
+    //   if (!studyTitle) {
+    //     showToast("Study Title is required.", true);
+    //     return;
+    //   }
+    //   showToast('Research proposal submitted.');
+    //   researchForm.reset();
+    // });
+
+    // const helpForm = document.getElementById('helpForm');
+    // helpForm && helpForm.addEventListener('submit', (e) => {
+    //   e.preventDefault();
+    //   const name = document.getElementById('help-name')?.value;
+    //   const email = document.getElementById('help-email')?.value;
+    //   const message = document.getElementById('help-message')?.value;
+    //   if (!name || !email || !message) {
+    //     showToast("Please fill out all fields in the support form.", true);
+    //     return;
+    //   }
+    //   showToast('Support request submitted successfully.');
+    //   helpForm.reset();
+    // });
+
     // note: profile menu removed (undoing last changes)
   }
 

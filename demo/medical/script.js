@@ -1091,8 +1091,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         appointments[idx].contactNumber = contactNumber;
         appointments[idx].apptDate = apptDate;
         appointments[idx].apptTime = apptTime;
-        appointments[idx].doctor = doctor;
+        appointments[idx].doctor = titleCase(normalizeDoctor(doctor));
         appointments[idx].gender = gender;
+         appointments[idx].age = age;
         appointments[idx].notes = notes;
         appointments[idx].assistance = assists;
   saveAppointments();

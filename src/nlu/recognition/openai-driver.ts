@@ -435,6 +435,35 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
         }
         ]
 
+        ### IMPORTANT: Deleting and Updating appointments
+        All click_in_context utterances must always return:
+        target = "send reminder", "delete appointment" or "update appointment" (since the user is using the icons in a specific row)
+        contextKey = "Patient name" (since that is the column in the table used to identify the conextValue)
+        contextValue = the uttered patient's name (since the user wants to refer to the action for a particular patient's name)
+ 
+        ### IMPORTANT: Search functionality ###
+        All search-related utterances must always return:
+        target = "search" (because the user is interacting with the search bar)
+        value = the extracted keyword, name, or phrase being searched
+ 
+        Extraction rules:
+        Ignore any words like “appointments” as targets (It is not the target to be focused on in the sentence).
+        The ONLY target returned is "search".
+        Everything after keywords like “by”, “with”, or “for” becomes the value unless its a date (conversion is required from text to the correct format).
+ 
+        Examples:
+        “search by doctor ben”
+        → { intent: "SEARCH_ELEMENT", target: "search", value: "doctor ben" }
+ 
+        “search all appointments with doctor ben”
+        → { intent: "SEARCH_ELEMENT", target: "search", value: "doctor ben" }
+ 
+        “search all male appointments”
+        → { intent: "SEARCH_ELEMENT", target: "search", value: "male" }
+ 
+        “search all appointments on November 2nd”
+        → { intent: "SEARCH_ELEMENT", target: "search", value: "2025-11-2" }
+
         ### IMPORTANT: Retaining context for multiple intents ###
         When multiple intents appear in one command, carry forward relevant context instead of treating them as separate, unrelated actions.
 

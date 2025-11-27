@@ -101,6 +101,7 @@ export enum IntentTypes {
   UNDO = 'undo',
   UNDO_TARGET = 'undo_target',
   SEARCH_ELEMENT = 'search_element',
+  CLICK_ELEMENT_WITH_VALUE = 'click_element_with_value'
 }
 
 // Audio Capturer interface

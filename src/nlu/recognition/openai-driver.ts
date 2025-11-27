@@ -440,27 +440,27 @@ export class OpenAIRecognitionDriver implements RecognitionDriver {
         target = "send reminder", "delete appointment" or "update appointment" (since the user is using the icons in a specific row)
         contextKey = "Patient name" (since that is the column in the table used to identify the conextValue)
         contextValue = the uttered patient's name (since the user wants to refer to the action for a particular patient's name)
- 
+
         ### IMPORTANT: Search functionality ###
         All search-related utterances must always return:
         target = "search" (because the user is interacting with the search bar)
         value = the extracted keyword, name, or phrase being searched
- 
+
         Extraction rules:
         Ignore any words like “appointments” as targets (It is not the target to be focused on in the sentence).
         The ONLY target returned is "search".
         Everything after keywords like “by”, “with”, or “for” becomes the value unless its a date (conversion is required from text to the correct format).
- 
+
         Examples:
         “search by doctor ben”
         → { intent: "SEARCH_ELEMENT", target: "search", value: "doctor ben" }
- 
+
         “search all appointments with doctor ben”
         → { intent: "SEARCH_ELEMENT", target: "search", value: "doctor ben" }
- 
+
         “search all male appointments”
         → { intent: "SEARCH_ELEMENT", target: "search", value: "male" }
- 
+
         “search all appointments on November 2nd”
         → { intent: "SEARCH_ELEMENT", target: "search", value: "2025-11-2" }
 
@@ -640,7 +640,8 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
                     "delete (target)",
                     "cancel (target)",
                     "create (target)",
-                    "download (target)"
+                    "download (target)",
+                    "sort (target)"
                 ],
                 negative_utterances: ["go to (target)"],
                 entities: ["target"]
@@ -720,7 +721,7 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
             [IntentTypes.SELECT_RADIO_OR_DROPDOWN]: {
                 // description:"Select a certain option from a dropdown or a radiobutton",
                 utterances: [
-                    //"select (group) in (target)",
+                    "select (group) as (target)",
                     "select (target) in (group)",
                     "choose (target) in (group)",
                     "pick (target) in (group)",
@@ -800,6 +801,17 @@ IMPORTANT: Return ONLY the raw JSON array without any markdown formatting, code 
                 negative_utterances: [],
                 entities: ["target", "value"]
             },
+
+            // [IntentTypes.CLICK_ELEMENT_WITH_VALUE]: {
+            //     // description:"set reminder for a appointment"
+            //     utterances: [
+            //         "(target) for (value) appointment",
+            //         "(target) for (value)",
+            //         "(target) to (value)"
+            //     ],
+            //     negative_utterances: [],
+            //     entities: ["target", "value"]
+            // },
 
             [IntentTypes.CLICK_ELEMENT_IN_CONTEXT]: {
             // description:"Clicking on an element under a context, probably in a table. The target button is most probably an action(verb).",

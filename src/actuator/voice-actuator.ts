@@ -434,6 +434,34 @@ public findFinalTarget(entity: VoiceEntity, context?: HTMLElement): HTMLElement 
     return false;
   }
 
+  private executeClickElementWithValueAction(entities: ProcessedEntities, actionType: string): boolean {
+    if (!entities.rawentities.target || !entities.targetElement) {
+      this.logger.warn(`[VoiceActuator]  No valid target for ${actionType} action`);
+      return false;
+    }
+
+    switch (actionType) {
+      case 'click':
+
+        entities.targetElement.click();
+
+        this.logger.info(`[VoiceActuator]  Clicked element:`, entities.targetElement);
+        break;
+    }
+    return true;
+  }
+
+  // private executeSortELementAction(entities: ProcessedEntities, check: boolean): boolean {
+  //   if (!entities.rawentities.target || !entities.targetElement) {
+  //     this.logger.warn(`[VoiceActuator]  No valid target for checkbox action`);
+  //     return false;
+  //   }
+
+  //   this.logger.warn(`[VoiceActuator]  Target element cannot be sorted`);
+  //   return false;
+  // }
+
+
   private executeCheckboxAction(entities: ProcessedEntities, check: boolean): boolean {
     if (!entities.rawentities.target || !entities.targetElement) {
       this.logger.warn(`[VoiceActuator]  No valid target for checkbox action`);

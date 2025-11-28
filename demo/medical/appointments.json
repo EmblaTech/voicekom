@@ -13,19 +13,6 @@
     "age": 42
   },
   {
-    "patientName": "Megan Brooks",
-    "contactNumber": "0779876543",
-    "apptDate": "2025-11-12",
-    "apptTime": "10:00",
-    "doctor": "Mark",
-    "gender": "F",
-    "assistance": [
-      "Disabled"
-    ],
-    "notes": "Allergy review",
-    "age": 36
-  },
-  {
     "patientName": "Ethan Walker",
     "contactNumber": "0701122334",
     "apptDate": "2025-11-13",

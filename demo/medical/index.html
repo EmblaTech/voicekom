@@ -700,19 +700,22 @@ input[type="date"] {
 
     header .logo { flex: 0 0 auto; margin-right: 12px; }
     header .tabs { margin-left: auto; }
-
+    
   /* Reports page: increase safe space below Download button so widget clears tables */
   #reportActions { margin-bottom: 120px; }
-
+ 
   /* Ensure filtered report table has extra breathing room above the floating widget */
   .report-table { margin-bottom: 100px; }
-
+ 
   /* Appointments page: tighten spacing between list and pagination, keep widget clearance via .page bottom margin */
   #appointments-page .card { margin-bottom: 24px; }
   #appointments-page .table { margin-bottom: 12px; }
-
+ 
   /* Restore larger gap below pagination so floating widget never overlaps controls */
   #appointments-page .pagination { margin-bottom: 160px; }
+
+  /* Reports page: trimmed safe space below Download button so widget clears but gap is minimal */
+  #reportActions { margin-bottom: 70px; }
 
   /* Added: user profile avatar and greeting */
   .user-info { display:flex; align-items:center; gap:14px; font-weight:600; margin-left:24px; }

@@ -191,6 +191,33 @@ export class UIHandler {
     this.syncTranscriptionDisplay();
   }
 
+  public showPersistentMessage(message: string): void {
+    if (this.statusDisplay) {
+      this.statusDisplay.textContent = message;
+      this.statusDisplay.classList.add('error-state');
+    }
+    if (this.actionButton) {
+      this.actionButton.disabled = true;
+      this.actionButton.style.pointerEvents = 'none';
+      this.actionButton.style.opacity = '0.5';
+    }
+    if (this.transcriptionDisplay) {
+        this.transcriptionDisplay.style.display = 'none';
+    }
+  }
+
+  public hidePersistentMessage(): void {
+    if (this.statusDisplay) {
+        this.statusDisplay.classList.remove('error-state');
+    }
+    if (this.actionButton) {
+      this.actionButton.disabled = false;
+      this.actionButton.style.pointerEvents = 'auto';
+      this.actionButton.style.opacity = '1';
+    }
+    this.updateUIStatus();
+  }
+
   public setTranscription(transcription: string): void {
     this.logger.info('Setting transcription:', transcription);
     this.transcription = transcription;
